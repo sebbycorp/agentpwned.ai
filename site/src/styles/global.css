@@ -785,12 +785,6 @@ h1 {
 	background: #000;
 }
 
-@keyframes board-draw {
-	to {
-		stroke-dashoffset: 0;
-	}
-}
-
 .status {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -857,15 +851,6 @@ h1 {
 @media (max-width: 720px) {
 	.status {
 		grid-template-columns: 1fr 1fr;
-	}
-}
-
-@media (prefers-reduced-motion: no-preference) {
-	.board.draw svg:not(.run) path[stroke] {
-		stroke-dasharray: 8000;
-		stroke-dashoffset: 8000;
-		animation: board-draw 1.15s ease forwards;
-		animation-delay: var(--d, 0s);
 	}
 }
 

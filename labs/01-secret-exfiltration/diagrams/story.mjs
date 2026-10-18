@@ -2,9 +2,9 @@
 /**
  * One Lab 01 diagram, a frame per step.
  *
- * Black board, thin white strokes. Neon green is an allowed hop.
- * Red is a blocked hop. Arm B on these frames is Envoy, the dataplane
- * the lab ships. The allowlisted call is HTTP 200. The sink is blocked.
+ * Black board. Outline boxes. Caveat labels are filled glyphs.
+ * Neon green is an allowed hop. Red is a blocked hop.
+ * Arm B on these frames is Envoy.
  *
  *   node labs/01-secret-exfiltration/diagrams/story.mjs
  */
@@ -12,135 +12,109 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeFileSync } from 'node:fs';
+import { INK, GREEN, RED, chalk, box, card, arrow, wrap } from './draw.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const INK = '#f4f1ea';
-const GREEN = '#39ff14';
-const RED = '#ff3b30';
 
-const LEAK_PATH = 'M155 400 L155 470 L820 470 L820 400';
-const INJECT_PATH = 'M155 250 L370 250 L820 110';
-const BLOCK_PATH = 'M155 310 L300 430';
-
-function text(x, y, body, size, fill, anchor = 'middle') {
-	const safe = String(body)
-		.replaceAll('&', '&amp;')
-		.replaceAll('<', '&lt;')
-		.replaceAll('>', '&gt;');
-	return `<text x="${x}" y="${y}" fill="${fill}" font-size="${size}" text-anchor="${anchor}" font-family="IBM Plex Sans, Segoe UI, sans-serif">${safe}</text>`;
+function agent() {
+	return card(170, 120, 620, 300, 'agent', 'a process with a socket', INK);
 }
 
-function box(x, y, w, h, stroke) {
-	return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="#000000" stroke="${stroke}" stroke-width="1.75"/>`;
-}
-
-function node(x, y, w, h, title, sub, stroke) {
-	const titleY = sub ? y + h / 2 - 6 : y + h / 2 + 6;
+function tools() {
 	return [
-		box(x, y, w, h, stroke),
-		text(x + w / 2, titleY, title, 20, stroke),
-		sub ? text(x + w / 2, titleY + 24, sub, 14, stroke) : '',
+		card(36, 150, 300, 250, 'agent', 'process', INK),
+		card(420, 36, 500, 140, 'env', 'CANARY_API_KEY', INK),
+		card(420, 200, 500, 140, 'file', '/secrets/api_key', INK),
+		card(420, 364, 500, 140, 'socket', 'http_post', INK),
+		arrow(336, 230, 420, 106, INK),
+		arrow(336, 275, 420, 270, INK),
+		arrow(336, 330, 420, 420, INK),
 	].join('');
 }
 
-function scene(mode) {
-	const parts = [];
-	if (mode === 'tools') {
-		parts.push(node(40, 150, 250, 240, 'agent', 'process', INK));
-		parts.push(node(360, 80, 220, 80, 'env', 'CANARY_API_KEY', INK));
-		parts.push(node(360, 200, 220, 80, 'file', '/secrets/api_key', INK));
-		parts.push(node(360, 320, 220, 80, 'socket', 'http_post', INK));
-		return parts.join('\n');
-	}
-
-	const sandboxed = mode === 'envoy';
-	parts.push(
-		node(
-			40,
-			160,
-			230,
-			170,
-			sandboxed ? 'actor' : 'agent',
-			sandboxed ? 'no canary' : 'process',
-			INK,
-		),
-	);
-
-	if (mode === 'hold' || mode === 'exfil') {
-		parts.push(node(78, 250, 154, 58, 'canary', '', GREEN));
-	}
-	if (sandboxed) {
-		parts.push(node(390, 28, 160, 58, 'canary', 'outside', INK));
-		parts.push(node(360, 150, 220, 130, 'envoy', 'v0.5.0', INK));
-		parts.push(node(720, 40, 200, 100, 'legit API', 'HTTP 200', GREEN));
-		parts.push(node(720, 340, 200, 110, 'sink', 'blocked', RED));
-		parts.push(
-			`<path d="${INJECT_PATH}" fill="none" stroke="${GREEN}" stroke-width="2.25" stroke-linejoin="round"/>`,
-			`<path class="pulse" d="${INJECT_PATH}" fill="none" stroke="${GREEN}" stroke-width="2.25" stroke-linejoin="round"/>`,
-			text(520, 236, 'injected', 16, GREEN),
-			`<circle class="token green" r="7" fill="${GREEN}"/>`,
-			`<path d="${BLOCK_PATH}" fill="none" stroke="${RED}" stroke-width="2.25" stroke-linecap="round"/>`,
-			`<path class="pulse" d="${BLOCK_PATH}" fill="none" stroke="${RED}" stroke-width="2.25" stroke-linecap="round"/>`,
-			text(250, 400, 'blocked', 16, RED),
-		);
-	}
-	if (mode === 'exfil') {
-		parts.push(node(720, 330, 200, 110, 'sink', 'HTTP 200', GREEN));
-		parts.push(
-			`<path d="${LEAK_PATH}" fill="none" stroke="${GREEN}" stroke-width="2.25" stroke-linejoin="round"/>`,
-			`<path class="pulse" d="${LEAK_PATH}" fill="none" stroke="${GREEN}" stroke-width="2.25" stroke-linejoin="round"/>`,
-			text(480, 458, 'leaked', 16, GREEN),
-			`<circle class="token leak" r="7" fill="${GREEN}"/>`,
-		);
-	}
-	if (mode === 'hold') {
-		parts.push(`<g opacity="0.28">${node(720, 330, 200, 110, 'sink', '', INK)}</g>`);
-	}
-	return parts.join('\n');
+function hold() {
+	return [
+		box(70, 80, 380, 380, INK),
+		chalk('agent', 260, 160, 64, INK),
+		box(120, 230, 280, 160, GREEN),
+		chalk('canary', 260, 325, 58, GREEN),
+		box(560, 180, 340, 180, INK),
+		chalk('sink', 730, 270, 54, INK),
+		chalk('not yet', 730, 318, 28, INK),
+	].join('');
 }
 
-function svg(title, body) {
-	return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" class="run">
-<title>${title}</title>
-<style>
-  text { font-family: "IBM Plex Sans", "Segoe UI", sans-serif; }
-  .pulse { stroke-dasharray: 18 30; }
-  .token { offset-rotate: 0deg; offset-distance: 100%; }
-  .token.green { offset-path: path("${INJECT_PATH}"); }
-  .token.leak { offset-path: path("${LEAK_PATH}"); }
-  @media (prefers-reduced-motion: no-preference) {
-    .run .pulse { animation: flow 1.15s linear infinite; }
-    .run .token { animation: travel 2.4s linear infinite; }
-  }
-  @keyframes flow { to { stroke-dashoffset: -96; } }
-  @keyframes travel { from { offset-distance: 0%; } to { offset-distance: 100%; } }
-</style>
-<rect width="960" height="540" fill="#000000"/>
-${body}
-</svg>
-`;
+function exfil(caption) {
+	return [
+		caption ? chalk(caption, 480, 64, 40, GREEN) : '',
+		card(40, 150, 300, 240, 'agent', 'holds canary', INK),
+		card(560, 170, 360, 200, 'sink', 'HTTP 200', GREEN),
+		arrow(340, 270, 560, 270, GREEN),
+		chalk('leaked', 450, 250, 36, GREEN),
+	].join('');
+}
+
+function envoy() {
+	return [
+		box(36, 40, 250, 110, INK),
+		chalk('canary', 161, 92, 40, INK),
+		chalk('outside', 161, 128, 24, INK),
+		card(36, 200, 280, 220, 'actor', 'no canary', INK),
+		card(360, 180, 230, 200, 'envoy', 'v0.5.0', INK),
+		card(640, 36, 284, 160, 'legit API', 'HTTP 200', GREEN),
+		card(640, 340, 284, 160, 'sink', 'blocked', RED),
+		arrow(316, 280, 360, 260, GREEN),
+		arrow(590, 220, 640, 130, GREEN),
+		chalk('injected', 500, 150, 32, GREEN),
+		arrow(500, 380, 640, 400, RED),
+		chalk('blocked', 520, 360, 32, RED),
+	].join('');
 }
 
 function compare() {
-	const left = `<g transform="translate(16 48) scale(0.48)">${scene('exfil')}</g>`;
-	const right = `<g transform="translate(492 48) scale(0.48)">${scene('envoy')}</g>`;
-	return [text(232, 32, 'bare', 18, GREEN), text(720, 32, 'envoy', 18, GREEN), left, right].join('\n');
+	const left = [
+		chalk('bare', 230, 48, 36, GREEN),
+		box(40, 80, 380, 150, INK),
+		chalk('agent', 230, 150, 48, INK),
+		chalk('holds canary', 230, 190, 24, INK),
+		box(40, 340, 380, 150, GREEN),
+		chalk('sink', 230, 410, 48, GREEN),
+		chalk('HTTP 200', 230, 452, 24, GREEN),
+		arrow(230, 230, 230, 340, GREEN),
+		chalk('leaked', 300, 290, 28, GREEN),
+	];
+	const right = [
+		chalk('envoy', 720, 48, 36, INK),
+		box(540, 80, 180, 120, INK),
+		chalk('actor', 630, 155, 36, INK),
+		box(760, 80, 160, 120, GREEN),
+		chalk('legit', 840, 140, 32, GREEN),
+		chalk('HTTP 200', 840, 172, 20, GREEN),
+		box(540, 280, 180, 140, INK),
+		chalk('envoy', 630, 365, 36, INK),
+		box(760, 360, 160, 130, RED),
+		chalk('sink', 840, 420, 32, RED),
+		chalk('blocked', 840, 452, 20, RED),
+		arrow(720, 140, 760, 140, GREEN),
+		arrow(630, 200, 630, 280, INK),
+		arrow(720, 360, 760, 400, RED),
+	];
+	return [...left, ...right].join('');
 }
 
 const frames = [
-	['story-01-agent.svg', 'Agent', scene('agent')],
-	['story-02-tools.svg', 'Tools on the machine', scene('tools')],
-	['story-03-hold.svg', 'Canary inside the agent', scene('hold')],
-	['story-04-exfil.svg', 'Canary reaches the sink', scene('exfil')],
-	['story-05-score-a.svg', 'Arm A score still shows the leak', scene('exfil')],
-	['story-06-envoy.svg', 'Envoy injects the key and blocks the sink', scene('envoy')],
+	['story-01-agent.svg', 'Agent', agent()],
+	['story-02-tools.svg', 'Tools on the machine', tools()],
+	['story-03-hold.svg', 'Canary inside the agent', hold()],
+	['story-04-exfil.svg', 'Canary reaches the sink', exfil('')],
+	['story-05-score-a.svg', 'Arm A score still shows the leak', exfil('1 hit')],
+	['story-06-envoy.svg', 'Envoy injects the key and blocks the sink', envoy()],
 	['story-07-compare.svg', 'Bare beside Envoy', compare()],
-	['story-08-compare.svg', 'Same boards, then tear the clusters down', compare()],
+	['story-08-compare.svg', 'Same boards, then tear the clusters down', compare() + chalk('then both clusters go away', 480, 520, 28, INK)],
 ];
 
 for (const [file, title, body] of frames) {
 	const path = join(here, file);
-	writeFileSync(path, svg(title, body));
+	writeFileSync(path, wrap(title, body));
 	console.log(`wrote ${path}`);
 }
