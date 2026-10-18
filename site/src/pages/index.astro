@@ -55,11 +55,13 @@ const labs = await getLabs();
 						<p class="cmd"><span class="ps1">lab@local</span> score</p>
 						<dl class="run">
 							<dt>status</dt>
-							<dd class="wait">coming in the lab</dd>
+							<dd class="wait">Lab 01 scorecard</dd>
 						</dl>
 					</div>
 				</div>
-				<p class="caption">A sketch of the loop. These lines are the question the lab asks, not a recorded score.</p>
+				<p class="caption">
+					A sketch of the loop. Lab 01 computes the score from the cluster. This card is not that scorecard.
+				</p>
 			</div>
 		</div>
 	</section>
@@ -92,8 +94,10 @@ const labs = await getLabs();
 					<h3>Move the secret and the network outside</h3>
 					<p>
 						Egress control limits which destinations an agent may reach. Credential injection attaches a secret to an
-						approved request from outside the agent process, so the process itself does not hold the key. The labs will
-						use <a href="https://github.com/agent-substrate/substrate">Agent Substrate</a> and <a href="https://kagent.dev">kagent</a> SandboxAgent. The exact setup is coming in the lab.
+						approved request from outside the agent process, so the process itself does not hold the key.
+						<a href="/labs/01-secret-exfiltration/">Lab 01</a> does this on a local kind cluster with
+						<a href="https://github.com/agent-substrate/substrate">Agent Substrate</a>. The actor does not hold the
+						key. The lab does not use a SandboxAgent CRD.
 					</p>
 				</li>
 			</ul>
@@ -120,16 +124,16 @@ const labs = await getLabs();
 					<p class="step-no">02</p>
 					<h3>Attack the same agent in a sandbox</h3>
 					<p>
-						Keep the task. Change the boundary: the secret is injected outside the process, and outbound traffic has an
-						allowlist. The Agent Substrate and kagent SandboxAgent setup is coming in the lab.
+						Keep the task. In Lab 01 the sandboxed run is an Agent Substrate actor with no copy of the key, an egress
+						allowlist, and credential injection at the gateway.
 					</p>
 				</li>
 				<li class="step">
 					<p class="step-no">03</p>
 					<h3>Score the difference</h3>
 					<p>
-						Compare the two runs with the same questions. Did the canary leave? Which destinations were contacted? What
-						could the agent still do? The scoring harness is coming in the lab.
+						Compare the two runs with the Lab 01 scorecard. It reads the cluster after the run. This site does not
+						publish a canned score.
 					</p>
 				</li>
 			</ol>
@@ -140,8 +144,8 @@ const labs = await getLabs();
 		<div class="wrap">
 			<h2>Labs</h2>
 			<p class="intro">
-				Three labs are sketched. The page shape is ready. Runnable steps land with each lab. Nothing here is aimed at a
-				system outside your local lab.
+				Lab 01 is a draft you can run on a local kind cluster. Egress Allowlist and Blast Radius are still
+				placeholders. Nothing here is aimed at a system outside your local lab.
 			</p>
 			<ul class="lab-grid">
 				{

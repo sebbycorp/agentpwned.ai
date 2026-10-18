@@ -1,7 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import { LAB_SECTIONS, labNumber, sectionId, statusLabel } from '../../lib/labs';
+import { badgeClass, labNumber, statusLabel } from '../../lib/labs';
 
 export async function getStaticPaths() {
 	const labs = await getCollection('labs');
@@ -12,11 +12,10 @@ export async function getStaticPaths() {
 }
 
 const { lab } = Astro.props;
-const { Content } = await render(lab);
+const { Content, headings } = await render(lab);
 const number = labNumber(lab.data.order);
 const label = lab.data.kind === 'template' ? 'Template' : `Lab ${number}`;
-const badgeClass =
-	lab.data.status === 'available' ? 'badge ready' : lab.data.status === 'template' ? 'badge template' : 'badge';
+const sections = headings.filter((heading) => heading.depth === 2);
 ---
 
 <Base title={`${label}: ${lab.data.title}`} description={lab.data.summary} current={lab.data.kind === 'template' ? 'template' : 'lab'}>
@@ -30,10 +29,12 @@ const badgeClass =
 			<header class="lab-head">
 				<p class="kicker">
 					<span>{label}</span>
-					<span class={badgeClass}>{statusLabel(lab.data.status)}</span>
+					<span class={badgeClass(lab.data.status)}>{statusLabel(lab.data.status)}</span>
+					{lab.data.duration && <span>{lab.data.duration}</span>}
+					{lab.data.difficulty && <span>{lab.data.difficulty}</span>}
 				</p>
 				<h1>{lab.data.title}</h1>
-				<p class="lede">{lab.data.summary}</p>
+				{lab.data.status !== 'draft' && <p class="lede">{lab.data.summary}</p>}
 				{
 					lab.data.status === 'coming-soon' && (
 						<p class="banner" role="status">
@@ -50,22 +51,36 @@ const badgeClass =
 					)
 				}
 				{
+					lab.data.status === 'draft' && (
+						<p class="banner note" role="status">
+							Draft. This page is the lab in the repo. Run it only on a local kind cluster, with canary secrets.
+						</p>
+					)
+				}
+				{
 					lab.data.kind === 'template' && (
 						<p class="banner note">
 							Author template. Copy this file when you add a lab. Readers do not run this page.
 						</p>
 					)
 				}
-				{lab.data.kind === 'lab' && <p class="safety">All lab attacks run only in isolated, local lab environments.</p>}
+				{lab.data.kind === 'lab' && lab.data.status !== 'draft' && (
+					<p class="safety">All lab attacks run only in isolated, local lab environments.</p>
+				)}
+				{lab.data.status === 'draft' && (
+					<p class="safety">
+						Repo path: labs/{lab.id}. All lab attacks run only on a local kind cluster.
+					</p>
+				)}
 			</header>
 			<div class="lab-layout">
 				<nav class="section-nav" aria-label="Lab sections">
 					<p class="kicker">On this page</p>
 					<ol>
 						{
-							LAB_SECTIONS.map((section) => (
+							sections.map((section) => (
 								<li>
-									<a href={`#${sectionId(section)}`}>{section}</a>
+									<a href={`#${section.slug}`}>{section.text}</a>
 								</li>
 							))
 						}

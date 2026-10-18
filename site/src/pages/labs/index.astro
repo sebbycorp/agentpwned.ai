@@ -8,7 +8,7 @@ const labs = await getLabs();
 
 <Base
 	title="Labs"
-	description="Labs that compare a bare agent with a sandboxed one. Lab 01, Secret Exfiltration, is coming soon."
+	description="Lab 01, Secret Exfiltration, is a draft local kind lab. Two more labs are placeholders."
 	current="labs"
 >
 	<section class="section lab">
@@ -16,8 +16,8 @@ const labs = await getLabs();
 			<p class="kicker">Index</p>
 			<h1>Labs</h1>
 			<p class="lede">
-				Educate by doing. Each lab attacks a bare agent, repeats the attack inside a sandbox, and scores the
-				difference. All lab attacks run only in isolated, local lab environments.
+				Educate by doing. Lab 01 attacks a bare agent, repeats the attack inside an Agent Substrate actor, and
+				scores the difference from the cluster. All lab attacks run only on a local kind cluster.
 			</p>
 			<ul class="lab-grid">
 				{
@@ -32,26 +32,27 @@ const labs = await getLabs();
 			<div class="panel author">
 				<h2>Add a lab</h2>
 				<p>
-					A lab is one markdown file. The build checks the headings, so a new page picks up the same shape as the
-					<a href="/labs/template/">page template</a>.
+					A published lab is a folder under <code>labs/</code>. The page shape is the
+					<a href="/labs/template/">template</a>. Lab 01 is the example.
 				</p>
 				<ol>
 					<li>
-						Copy <code>site/src/content/labs/template.md</code> to <code>site/src/content/labs/NN-short-name.md</code>.
-						<code>NN</code> is the next two-digit number. The file name is the URL, so
-						<code>04-egress-notes.md</code> is served at <code>/labs/04-egress-notes/</code>.
+						Add <code>labs/NN-short-name/lab.md</code> with <code>title</code>, <code>slug</code>, <code>status</code>,
+						and optional <code>duration</code> and <code>difficulty</code>. The site shows that status.
+						<code>draft</code> is not "coming soon".
 					</li>
 					<li>
-						Set <code>title</code>, <code>summary</code>, <code>order</code>, <code>status</code>
-						(<code>coming-soon</code> or <code>available</code>), and <code>kind: lab</code>.
+						Add <code>labs/NN-short-name/README.md</code>. Keep these level-2 headings, in order: Objectives,
+						Prerequisites, Setup, Attack, Defend, Measure, Cleanup. Extra sections are fine. The site renders this
+						file at <code>/labs/NN-short-name/</code>.
 					</li>
 					<li>
-						Keep these seven level-2 headings, in order: Objectives, Prerequisites, Setup, Attack, Defend, Measure,
-						Cleanup. Replace the template guidance with the lab.
+						Remove any placeholder at <code>site/src/content/labs/NN-short-name.md</code>. A placeholder is only for a
+						lab that does not have a repo folder yet.
 					</li>
 					<li>
-						From <code>site/</code>, run <code>npm run build</code>. The build fails if a heading is missing, or if
-						site copy contains an em dash or an en dash.
+						From <code>site/</code>, run <code>npm run build</code>. The build fails if a required heading is missing,
+						or if site copy contains an em dash or an en dash.
 					</li>
 				</ol>
 			</div>

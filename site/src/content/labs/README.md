@@ -1,14 +1,20 @@
 # Lab pages
 
-Each lab is one markdown file in this folder. `template.md` is the page shape. Numbered files (`01-secret-exfiltration.md`, and so on) show up on the labs index in `order`.
+The site publishes two kinds of lab entries.
 
-`README.md` is not a lab. The site only loads `template.md` and files named `NN-something.md`.
+## A lab in the repo
 
-## Add a lab
+`labs/NN-short-name/` is the source when that folder exists. Lab 01 is the example.
 
-1. Copy `template.md` to `NN-short-name.md`. `NN` is the next two-digit number. The file name is the URL, so `04-egress-notes.md` is served at `/labs/04-egress-notes/`.
-2. Set `title`, `summary`, `order`, `status` (`coming-soon` or `available`), and `kind: lab`.
-3. Keep these seven level-2 headings, in order: Objectives, Prerequisites, Setup, Attack, Defend, Measure, Cleanup. Replace the template guidance with the lab.
-4. From `site/`, run `npm run build`. The build fails if a heading is missing, or if site copy contains an em dash or an en dash.
+- `lab.md` frontmatter supplies `title`, `slug`, `status`, and optional `duration` and `difficulty`. The labs index shows `status` as written. `draft` is not "coming soon".
+- `README.md` is the page body. Include these level-2 headings, in order: Objectives, Prerequisites, Setup, Attack, Defend, Measure, Cleanup. Extra sections are allowed.
+- The URL is `/labs/NN-short-name/`.
+- Do not keep a same-named file in this folder. The build rejects that duplicate.
 
-Say "coming in the lab" when a command, policy, or score is not written yet. Do not invent stats or quotes. Attacks in these pages run only in isolated, local lab environments.
+## A placeholder
+
+Until a `labs/` folder exists, add `NN-short-name.md` here. Copy `template.md`. Set `title`, `summary`, `order`, `status` (`coming-soon` or `available`), and `kind: lab`. The seven headings above must be the only level-2 headings, in that order.
+
+`template.md` is the page shape. `README.md` in this folder is not a lab.
+
+From `site/`, `npm run build` checks the headings. It also rejects an em dash or an en dash in site copy. Lab writeups under `labs/` keep their own punctuation.

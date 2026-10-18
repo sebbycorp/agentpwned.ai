@@ -34,6 +34,20 @@ if (existsSync(indexPath)) {
 		if (html.includes(snippet)) errors.push(`tracking snippet in dist/index.html: ${snippet}`);
 	}
 	if (!html.includes('agents get pwned')) errors.push('dist/index.html is missing the hero tagline');
+	const rawIndex = readFileSync(indexPath, 'utf8');
+	const withoutDenial = rawIndex.replaceAll('does not use a SandboxAgent CRD', '');
+	if (/sandboxagent/i.test(withoutDenial)) {
+		errors.push('landing page claims SandboxAgent beyond the lab denial');
+	}
+}
+
+const lab01Path = join(dist, 'labs/01-secret-exfiltration/index.html');
+if (existsSync(lab01Path)) {
+	const lab01 = readFileSync(lab01Path, 'utf8');
+	if (!lab01.includes('>Draft<')) errors.push('Lab 01 page does not show Draft from lab.md');
+	if (lab01.includes('Coming soon')) errors.push('Lab 01 page is still marked coming soon');
+	if (!lab01.includes('arm-a-up.sh')) errors.push('Lab 01 page is not rendering labs/01-secret-exfiltration/README.md');
+	if (!lab01.includes('id="attack"')) errors.push('Lab 01 page is missing the Attack section');
 }
 
 if (errors.length > 0) {

@@ -20,7 +20,7 @@ export function labNumber(order: number): string {
 	return String(order).padStart(2, '0');
 }
 
-export function statusLabel(status: LabEntry['data']['status']): string {
+export function statusLabel(status: string): string {
 	switch (status) {
 		case 'coming-soon':
 			return 'Coming soon';
@@ -28,6 +28,25 @@ export function statusLabel(status: LabEntry['data']['status']): string {
 			return 'Ready';
 		case 'template':
 			return 'Template';
+		case 'draft':
+			return 'Draft';
+		default:
+			return status;
+	}
+}
+
+export function badgeClass(status: string): string {
+	switch (status) {
+		case 'available':
+			return 'badge ready';
+		case 'template':
+			return 'badge template';
+		case 'draft':
+			return 'badge draft';
+		case 'coming-soon':
+			return 'badge';
+		default:
+			return 'badge draft';
 	}
 }
 

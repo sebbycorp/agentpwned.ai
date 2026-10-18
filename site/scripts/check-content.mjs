@@ -69,8 +69,51 @@ for (const root of scanRoots) {
 	}
 }
 
+const repoLabs = join(repoRoot, 'labs');
+const publishedIds = new Set();
+if (statSync(repoLabs, { throwIfNoEntry: false })?.isDirectory()) {
+	for (const name of readdirSync(repoLabs)) {
+		if (!/^\d\d-/.test(name)) continue;
+		const folder = join(repoLabs, name);
+		if (!statSync(folder).isDirectory()) continue;
+		const labFile = join(folder, 'lab.md');
+		const readmeFile = join(folder, 'README.md');
+		if (!statSync(labFile, { throwIfNoEntry: false })?.isFile() || !statSync(readmeFile, { throwIfNoEntry: false })?.isFile()) {
+			errors.push(`${name} needs both lab.md and README.md`);
+			continue;
+		}
+		const meta = readFileSync(labFile, 'utf8');
+		const fence = meta.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+		if (!fence) {
+			errors.push(`${name}/lab.md is missing frontmatter`);
+			continue;
+		}
+		const status = field(fence[1], 'status');
+		const title = field(fence[1], 'title');
+		const slug = field(fence[1], 'slug') || name;
+		if (!title || !status) errors.push(`${name}/lab.md needs title and status`);
+		if (slug !== name) errors.push(`${name}/lab.md slug must match the folder name`);
+		publishedIds.add(name);
+		const readme = readFileSync(readmeFile, 'utf8');
+		let cursor = 0;
+		for (const line of readme.split(/\r?\n/)) {
+			const heading = line.match(/^##\s+(.+?)\s*$/);
+			if (heading && heading[1] === REQUIRED[cursor]) cursor += 1;
+		}
+		if (cursor !== REQUIRED.length) {
+			errors.push(`${name}/README.md must include these level-2 headings in order: ${REQUIRED.join(', ')}`);
+		}
+		const placeholder = join(siteRoot, 'src/content/labs', `${name}.md`);
+		if (statSync(placeholder, { throwIfNoEntry: false })?.isFile()) {
+			errors.push(`Remove site/src/content/labs/${name}.md. labs/${name} is the source for that page.`);
+		}
+	}
+}
+
 const labsDir = join(siteRoot, 'src/content/labs');
-const labFiles = readdirSync(labsDir).filter((name) => /^\d\d-.+\.md$/.test(name) || name === 'template.md');
+const labFiles = readdirSync(labsDir).filter(
+	(name) => (/^\d\d-.+\.md$/.test(name) || name === 'template.md') && !publishedIds.has(name.replace(/\.md$/, '')),
+);
 
 if (!labFiles.includes('template.md')) {
 	errors.push('site/src/content/labs/template.md is missing');
@@ -127,4 +170,4 @@ if (errors.length > 0) {
 	process.exit(1);
 }
 
-console.log(`Content check passed (${labFiles.length} lab files).`);
+console.log(`Content check passed (${labFiles.length} site lab files, ${publishedIds.size} repo labs).`);

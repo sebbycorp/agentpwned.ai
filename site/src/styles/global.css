@@ -457,6 +457,12 @@ h1 {
 	background: rgba(159, 212, 255, 0.08);
 }
 
+.badge.draft {
+	color: var(--text);
+	border-color: var(--line-strong);
+	background: transparent;
+}
+
 .step-no {
 	font-family: var(--mono);
 	color: var(--accent);
@@ -567,6 +573,8 @@ h1 {
 
 .lab-body {
 	max-width: 44rem;
+	min-width: 0;
+	overflow-x: auto;
 }
 
 .lab-body h2 {
@@ -605,6 +613,29 @@ h1 {
 	background: var(--bg-inset);
 	border-radius: 4px;
 	padding: 0.1em 0.35em;
+}
+
+.lab-body table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.95rem;
+	margin: 1rem 0;
+}
+
+.lab-body th,
+.lab-body td {
+	border: 1px solid var(--line);
+	padding: 0.45rem 0.6rem;
+	text-align: left;
+	vertical-align: top;
+}
+
+.lab-body th {
+	font-family: var(--mono);
+	font-size: 0.75rem;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--muted);
 }
 
 .lab-body pre {

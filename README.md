@@ -2,25 +2,28 @@
 
 Educational labs for security engineers, platform engineers, and students. The site teaches why an AI agent needs a sandbox, how egress control and credential injection change what that agent can leak, and how to measure a bare agent against a sandboxed one.
 
-The labs will use [Agent Substrate](https://github.com/agent-substrate/substrate) and kagent [SandboxAgent](https://kagent.dev). Runnable setup for those tools is coming in the lab. This repo does not claim product behavior that a lab has not shown.
+Everything here runs on a local kind cluster, with canary secrets only. See [SECURITY.md](SECURITY.md).
 
-All lab attacks run only in isolated, local lab environments.
+## Labs
+
+- [Lab 01: Secret Exfiltration](labs/01-secret-exfiltration/README.md). Status comes from [lab.md](labs/01-secret-exfiltration/lab.md) and is `draft`. Arm A gives the agent a canary key. Arm B runs the same agent as an [Agent Substrate](https://github.com/agent-substrate/substrate) actor: the actor does not hold the key, an egress allowlist blocks the sink, and the gateway injects the key only toward the allowlisted vendor API. The lab does not use a `SandboxAgent` CRD.
+
+The site renders Lab 01 from those files. Later labs can stay as placeholders in the site until a `labs/` folder exists.
 
 ## Layout
 
-The site lives in `site/` so later lab material can sit beside it:
-
 ```text
-README.md          this file
-DEPLOY.md          GitHub Pages and DNS for agentpwned.ai
+README.md
+DEPLOY.md          GitHub Pages and DNS
+SECURITY.md
+Makefile           scoring tests and Lab 01 cluster targets
 .github/workflows/ site build on pull requests, Pages deploy on main
-site/              Astro static site
-labs/              reserved for future lab harnesses
-scoring/           reserved for future scoring
-instructor/        reserved for future instructor notes
+site/              Astro site
+labs/              lab harnesses
+scoring/           scorecards
 ```
 
-`labs/`, `scoring/`, and `instructor/` are not created yet. Astro does not need the repo root, so the site stays in `site/` and those folders can be added without moving the site.
+Lab 01 instructor notes are [labs/01-secret-exfiltration/instructor.md](labs/01-secret-exfiltration/instructor.md). There is no top-level `instructor/` folder yet.
 
 ## Run the site locally
 
@@ -34,22 +37,34 @@ npm run dev
 
 Open http://127.0.0.1:4321.
 
-`npm run build` writes the static site to `site/dist` and checks lab headings, the `CNAME` file, and that site copy has no em dash or en dash. `npm run preview` serves that build.
+`npm run build` writes the static site to `site/dist`. It checks lab headings, the `CNAME` file, and that site copy has no em dash or en dash. `npm run preview` serves that build.
+
+## Run Lab 01
+
+Follow [labs/01-secret-exfiltration/README.md](labs/01-secret-exfiltration/README.md). From the repo root:
+
+```sh
+make test
+```
+
+That runs the scoring unit tests. The `make lab01-*` targets bring clusters up and down. They need Docker and kind, and Arm B needs a Substrate checkout. Details are in the lab README.
 
 ## Add a lab
 
-A lab is one markdown file in `site/src/content/labs/`. See also `site/src/content/labs/README.md` and the [page template](site/src/content/labs/template.md).
+A lab the site publishes is a folder under `labs/`:
 
-1. Copy `site/src/content/labs/template.md` to `site/src/content/labs/NN-short-name.md`. `NN` is the next two-digit number. The file name is the URL, so `04-egress-notes.md` is served at `/labs/04-egress-notes/`.
-2. Set `title`, `summary`, `order`, `status` (`coming-soon` or `available`), and `kind: lab`.
-3. Keep these seven level-2 headings, in order: Objectives, Prerequisites, Setup, Attack, Defend, Measure, Cleanup. Replace the template guidance with the lab.
-4. From `site/`, run `npm run build`. The build fails if a heading is missing, or if site copy contains an em dash or an en dash.
+1. Add `labs/NN-short-name/lab.md` with frontmatter: `title`, `slug`, `status`, and optional `duration` and `difficulty`. The site shows `status` as written. `draft` is not "coming soon".
+2. Add `labs/NN-short-name/README.md`. Include these level-2 headings, in order: Objectives, Prerequisites, Setup, Attack, Defend, Measure, Cleanup. Extra sections are allowed. The site renders this file at `/labs/NN-short-name/`.
+3. Do not also keep `site/src/content/labs/NN-short-name.md`. The repo lab replaces that placeholder.
+4. From `site/`, run `npm run build`.
+
+A lab that is not written yet can be a placeholder markdown file in `site/src/content/labs/`, using the [page template](site/src/content/labs/template.md). See [site/src/content/labs/README.md](site/src/content/labs/README.md).
 
 ## Content rules
 
-- Do not invent stats, quotes, or Agent Substrate behavior. If the setup is not written yet, say it is coming in the lab.
-- No em dashes or en dashes in site copy.
-- Lab attacks stay in isolated, local lab environments.
+- Do not invent stats, quotes, or runtime behavior. Lab 01 is the source for what this repo says about Agent Substrate.
+- No em dashes or en dashes in site copy. Lab writeups keep the punctuation they already have.
+- Lab attacks stay on a local kind cluster, with canary secrets only.
 
 ## Deploy
 
