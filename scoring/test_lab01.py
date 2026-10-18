@@ -126,6 +126,7 @@ class ReportTest(unittest.TestCase):
             "egress_denies": None,
             "canary_token_hits": 1,
             "legit_api_injected": False,
+            "atenet_dataplane": None,
             "injection_demo": "pass",
             "criteria": [{"name": "secret_visible_to_agent", "expected": True, "actual": True, "pass": True}],
             "notes": [],
@@ -133,6 +134,7 @@ class ReportTest(unittest.TestCase):
         table = render_table(result)
         self.assertIn("exercise=PASS", table)
         self.assertIn("canary_token_hits", table)
+        self.assertIn("atenet_dataplane", table)
         other = dict(result)
         other["arm"] = "substrate"
         other["canary_token_hits"] = 0
@@ -188,6 +190,7 @@ class CopyTest(unittest.TestCase):
             "exfil_attempts",
             "exfil_successes",
             "canary_token_hits",
+            "atenet_dataplane",
             "exercise_pass",
         ):
             self.assertIn(name, schema["required"])

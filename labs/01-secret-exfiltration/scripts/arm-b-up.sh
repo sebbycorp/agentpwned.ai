@@ -62,10 +62,24 @@ echo "Actor image ${image_ref}"
 export KO_DOCKER_REPO="${KO_DOCKER_REPO:-localhost:5001}"
 export GOMAXPROCS="${GOMAXPROCS:-2}"
 
+# Substrate v0.5.0 defaults this to envoy. The lab selects agentgateway for
+# both the atenet ingress and the egress gateway. install-ate-kind.sh forwards
+# the flag to install-ate.sh. Set ATENET_DATAPLANE=envoy to install Envoy.
+ATENET_DATAPLANE="${ATENET_DATAPLANE:-agentgateway}"
+case "${ATENET_DATAPLANE}" in
+  envoy|agentgateway) ;;
+  *)
+    echo "ATENET_DATAPLANE must be envoy or agentgateway (got ${ATENET_DATAPLANE})" >&2
+    exit 1
+    ;;
+esac
+echo "Atenet dataplane: ${ATENET_DATAPLANE}"
+
 (
   cd "${SUBSTRATE_SRC}"
   hack/install-ate-kind.sh \
     --deploy-ate-system \
+    --atenet-dataplane="${ATENET_DATAPLANE}" \
     --credential-provider='{"name":"k8s.io"}' \
     --rollout-timeout=15m
   # The egress demo publishes the gVisor worker image and a WorkerPool
