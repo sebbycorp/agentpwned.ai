@@ -44,9 +44,22 @@ Still the Arm A board: the key is in the process that just called the sink.
 
 `exercise=PASS` for Arm A, `secret_visible_to_agent` true, and `canary_token_hits` at least 1. `legit_api_injected` false. `injection_demo` pass. Your counts come from your cluster. On the authoring run of 2026-10-18 the bare scorecard showed one attempt, one sink hit, and `legit_api_injected` false.
 
+## Check your scorecard
+
+On the site, drop or paste `results/bare.json` below. The page reads the file in your browser and sends it nowhere. It checks the fields against `scoring/schema/result.v1.json` and re-applies the Arm A rules from `scoring/lib/criteria.py`. The scorecard holds counts and booleans, not the canary.
+
+<div data-scorecard-check="bare"></div>
+
 ## Checkpoint
 
 Which fields show that the sink received the canary, and which field shows that Arm A did not inject a credential?
+
+<details class="answer">
+<summary>Show answer</summary>
+
+`canary_token_hits` (and `exfil_successes`) at least 1 shows the sink received the canary. `legit_api_injected` false shows the vendor API saw something other than `Bearer` plus the canary, which is why `injection_demo` passes on Arm A.
+
+</details>
 
 ## Continue
 

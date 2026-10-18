@@ -43,6 +43,13 @@ The script finishes with the three namespaces above. The canary looks like `lab0
 
 Where does Arm A store the canary, and what does kindnet refuse to enforce?
 
+<details class="answer">
+<summary>Show answer</summary>
+
+Secret `vendor-api-token` in namespace `lab01-bare`, exposed to the agent as env `CANARY_API_KEY` and file `/secrets/api_key`. kindnet does not enforce Kubernetes NetworkPolicy, so nothing in the cluster stops the agent from reaching the sink.
+
+</details>
+
 ## Continue
 
 [Back: Prerequisites](02-prerequisites.md)

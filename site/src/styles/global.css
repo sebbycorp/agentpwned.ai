@@ -812,3 +812,132 @@ h1 {
 		animation: none !important;
 	}
 }
+
+/* Tutorial interactivity: copy buttons, progress, checkpoint answers, scorecard check */
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+.code-wrap {
+	position: relative;
+}
+.code-wrap pre {
+	padding-right: 4.5rem;
+}
+.copy {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	padding: 0.2rem 0.55rem;
+	border: 1px solid var(--line-strong);
+	border-radius: 4px;
+	background: var(--bg-raised);
+	color: var(--muted);
+	font-family: var(--mono);
+	font-size: 0.72rem;
+	cursor: pointer;
+}
+.copy:hover {
+	color: var(--accent);
+	border-color: var(--accent);
+}
+.progress-count {
+	margin-left: 0.4rem;
+	color: var(--muted);
+	text-transform: none;
+	letter-spacing: 0;
+}
+.step-nav a.done .step-index {
+	color: var(--defend);
+}
+.step-nav a.done .step-index::after {
+	content: ' \2713';
+}
+.step-done {
+	margin-top: 2rem;
+}
+.step-done[aria-pressed='true'] {
+	border-color: var(--defend);
+	color: var(--defend);
+}
+.lab-body details.answer {
+	margin: 0.75rem 0 1rem;
+	border: 1px solid var(--line);
+	border-left: 3px solid var(--measure);
+	border-radius: 4px;
+	background: var(--bg-raised);
+	padding: 0.5rem 0.9rem;
+}
+.lab-body details.answer summary {
+	cursor: pointer;
+	font-family: var(--mono);
+	font-size: 0.82rem;
+	color: var(--measure);
+}
+.lab-body details.answer[open] summary {
+	margin-bottom: 0.4rem;
+}
+.scorecard {
+	display: grid;
+	gap: 0.6rem;
+	margin: 1rem 0;
+	padding: 1rem;
+	border: 1px dashed var(--line-strong);
+	border-radius: 6px;
+	background: var(--bg-raised);
+}
+.scorecard.dragging {
+	border-color: var(--accent);
+}
+.scorecard textarea {
+	width: 100%;
+	resize: vertical;
+	padding: 0.6rem;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--bg-inset);
+	color: var(--text);
+	font-family: var(--mono);
+	font-size: 0.8rem;
+}
+.scorecard-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.6rem;
+}
+.scorecard-actions label.button {
+	cursor: pointer;
+}
+.result-head {
+	font-weight: 600;
+}
+.result-head.ok {
+	color: var(--defend);
+}
+.result-head.bad {
+	color: var(--attack);
+}
+.lab-body table.verdict tr.ok td:last-child {
+	color: var(--defend);
+}
+.lab-body table.verdict tr.bad td:last-child {
+	color: var(--attack);
+}
+.lab-body table.verdict tr.changed td {
+	background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.warnings li {
+	color: var(--amber);
+}
+.compare figcaption,
+.hint {
+	color: var(--muted);
+	font-size: 0.9rem;
+}
+.compare {
+	margin: 1rem 0 0;
+}

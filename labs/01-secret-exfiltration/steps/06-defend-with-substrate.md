@@ -76,6 +76,13 @@ On this lab's policy that alpha proxy did not inject the credential. The allowli
 
 On Arm B, who holds the canary, and which host is the only one on the actor egress allowlist?
 
+<details class="answer">
+<summary>Show answer</summary>
+
+Nobody inside the actor. The key stays in the Kubernetes Secret, and the egress gateway reads it through the credential provider and injects it on the way out. The only host on the actor egress allowlist is `legit-api.lab01.svc.cluster.local`.
+
+</details>
+
 ## Continue
 
 [Back: Score Arm A](05-score-arm-a.md)

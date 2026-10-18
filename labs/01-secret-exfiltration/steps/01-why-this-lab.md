@@ -34,6 +34,13 @@ A black board, white chalk, and one box labeled agent. Nothing has leaked yet be
 
 Why is a long-lived key inside the agent process stealable once the process can open a socket?
 
+<details class="answer">
+<summary>Show answer</summary>
+
+The process reads the key the same way it reads anything else, and a tool call can open a connection to any host it can reach. A crafted prompt only has to ask the program to read the key and send it. Nothing between the process and its socket knows the key is special, and a long-lived key stays useful to whoever receives it.
+
+</details>
+
 ## Continue
 
 [Back to the overview](../README.md)

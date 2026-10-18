@@ -70,6 +70,22 @@ if (existsSync(step1Path)) {
 	if (!step1.includes('<svg')) errors.push('Lab 01 step 1 is missing the lightboard');
 	if (!step1.includes('fill="#000000"')) errors.push('Lab 01 lightboard is missing its black board');
 }
+for (const [relativePath, arm] of [
+	['labs/01-secret-exfiltration/05-score-arm-a/index.html', 'bare'],
+	['labs/01-secret-exfiltration/07-score-the-difference/index.html', 'substrate'],
+]) {
+	const path = join(dist, relativePath);
+	if (existsSync(path) && !readFileSync(path, 'utf8').includes(`data-scorecard-check="${arm}"`)) {
+		errors.push(`dist/${relativePath} is missing the ${arm} scorecard check`);
+	}
+}
+for (const path of [step1Path, setupPath, defendPath, lastPath]) {
+	if (!existsSync(path)) continue;
+	const html = readFileSync(path, 'utf8');
+	if (!html.includes('class="answer"')) errors.push(`${path.slice(dist.length + 1)} is missing the checkpoint answer`);
+	if (!html.includes('data-step-done')) errors.push(`${path.slice(dist.length + 1)} is missing the step done control`);
+	if (!html.includes('<script')) errors.push(`${path.slice(dist.length + 1)} is missing the tutorial script`);
+}
 if (existsSync(setupPath) && !readFileSync(setupPath, 'utf8').includes('arm-a-up.sh')) {
 	errors.push('Lab 01 setup step is missing arm-a-up.sh');
 }

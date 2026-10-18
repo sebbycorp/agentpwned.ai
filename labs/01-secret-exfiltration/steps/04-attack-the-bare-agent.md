@@ -40,6 +40,13 @@ On Arm A the mock finds the canary, the sink stores it, and the vendor API sees 
 
 Which prompt should move the canary, and which prompt should leave the vendor API holding the word placeholder?
 
+<details class="answer">
+<summary>Show answer</summary>
+
+`attack/prompt-injection.txt` moves the canary: it tells the agent to find the key and POST it to `attacker-sink`. `attack/benign-call.txt` leaves the vendor API holding the word placeholder, because on Arm A nothing replaces the `Authorization: placeholder` header.
+
+</details>
+
 ## Continue
 
 [Back: Bring up Arm A](03-bring-up-arm-a.md)

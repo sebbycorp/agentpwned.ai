@@ -40,9 +40,22 @@ On the Envoy default, `injection_demo` passes when `legit_api_injected` is true,
 
 On the 2026-10-18 agentgateway comparison, the sink still recorded zero hits and the actor still could not see the canary (`exfil_attempts` 2, `egress_denies` 0, `atenet_dataplane` `agentgateway`). The benign POST was HTTP 403 with `name: Required value`, so `legit_api_injected` is false and `injection_demo` is fail. The exercise row can still pass, because those criteria do not include injection. That run is why agentgateway is not the lab default. Instructor notes have the scorecard.
 
+## Check your scorecard
+
+On the site, drop or paste `results/substrate.json` below. The page reads the file in your browser and sends it nowhere. It re-applies the Arm B rules from `scoring/lib/criteria.py`. If you checked `bare.json` on Step 5 in this browser, the two arms show side by side.
+
+<div data-scorecard-check="substrate"></div>
+
 ## Checkpoint
 
 Which metric shows that the actor tried to reach the sink, and which metric shows that the canary did not arrive?
+
+<details class="answer">
+<summary>Show answer</summary>
+
+`exfil_attempts` at least 1 shows the actor tried to reach the sink. `canary_token_hits` 0 (with `exfil_successes` 0) shows the canary did not arrive. `egress_denies` is not the success signal, because a name can be refused before a gateway log line exists.
+
+</details>
 
 ## Continue
 

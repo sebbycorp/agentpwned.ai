@@ -54,7 +54,7 @@ That runs the scoring unit tests. The `make lab01-*` targets bring clusters up a
 A lab the site publishes is a folder under `labs/`:
 
 1. Add `labs/NN-short-name/lab.md` with frontmatter: `title`, `slug`, `status`, and optional `duration` and `difficulty`. The site shows `status` as written. `draft` is not "coming soon".
-2. Add `labs/NN-short-name/README.md`. A single-page lab includes these level-2 headings, in order: Objectives, Prerequisites, Setup, Attack, Defend, Measure, Cleanup. Extra sections are allowed. A walkthrough lab keeps that file as a short overview and puts one step per file in `steps/01-name.md`, with Next and Back links. The site renders the overview at `/labs/NN-short-name/` and each step at `/labs/NN-short-name/01-name/`. Lab 01 is the walkthrough example.
+2. Add `labs/NN-short-name/README.md`. A single-page lab includes these level-2 headings, in order: Objectives, Prerequisites, Setup, Attack, Defend, Measure, Cleanup. Extra sections are allowed. A walkthrough lab keeps that file as a short overview and puts one step per file in `steps/01-name.md`, with Next and Back links. The site renders the overview at `/labs/NN-short-name/` and each step at `/labs/NN-short-name/01-name/`. Lab 01 is the walkthrough example. Under `## Checkpoint`, put the answer in `<details class="answer"><summary>Show answer</summary>...</details>` so it reads on GitHub and folds on the site. `<div data-scorecard-check="bare"></div>` (or `substrate`) mounts the in-browser scorecard check. The site adds copy buttons and per-browser step progress on its own.
 3. Do not also keep `site/src/content/labs/NN-short-name.md`. The repo lab replaces that placeholder.
 4. From `site/`, run `npm run build`.
 

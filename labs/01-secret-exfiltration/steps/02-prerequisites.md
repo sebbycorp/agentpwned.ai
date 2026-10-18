@@ -42,6 +42,13 @@ Nothing in the cluster yet. `docker`, `kind`, `kubectl`, and `python3` answer `-
 
 Which hosts is the agent process willing to call, and why does the lab keep the sink inside cluster DNS?
 
+<details class="answer">
+<summary>Show answer</summary>
+
+The agent process refuses tool calls whose host is outside cluster DNS (`*.svc` and `*.svc.cluster.local`). The sink is a Service inside the kind cluster, so the attack never leaves your machine and never touches a host you do not own. Only canary values are used.
+
+</details>
+
 ## Continue
 
 [Back: Why this lab](01-why-this-lab.md)

@@ -63,6 +63,13 @@ kagent **main** at `7a0a4fd0` (the tip on 2026-10-18, unreleased relative to alp
 
 What do the two down scripts delete, and what do they leave in `~/.cache/agentpwned/substrate`?
 
+<details class="answer">
+<summary>Show answer</summary>
+
+`arm-a-down.sh` deletes kind cluster `lab01-bare`. `arm-b-down.sh` deletes kind cluster `kind` and the `kind-registry` container. The Substrate checkout under `~/.cache/agentpwned/substrate` stays, so the next run does not clone the tag again.
+
+</details>
+
 ## Continue
 
 [Back: Score the difference](07-score-the-difference.md)

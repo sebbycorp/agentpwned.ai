@@ -24,7 +24,7 @@ const number = labNumber(lab.data.order);
 const overviewHref = `/labs/${lab.id}/`;
 ---
 
-<article class="lab tutorial">
+<article class="lab tutorial" data-lab={lab.id} data-step={currentId}>
 	<div class="wrap">
 		<nav class="crumbs" aria-label="Breadcrumb">
 			<a href="/labs/">Labs</a>
@@ -53,7 +53,7 @@ const overviewHref = `/labs/${lab.id}/`;
 		</header>
 		<div class="lab-layout">
 			<nav class="section-nav step-nav" aria-label="Tutorial steps">
-				<p class="kicker">Steps</p>
+				<p class="kicker">Steps <span class="progress-count" data-progress-count hidden></span></p>
 				<ol>
 					<li>
 						<a href={overviewHref} aria-current={currentId === 'overview' ? 'step' : undefined}>Overview</a>
@@ -61,7 +61,7 @@ const overviewHref = `/labs/${lab.id}/`;
 					{
 						steps.map((step) => (
 							<li>
-								<a href={step.href} aria-current={step.id === currentId ? 'step' : undefined}>
+								<a href={step.href} data-step-id={step.id} aria-current={step.id === currentId ? 'step' : undefined}>
 									<span class="step-index">{String(step.order).padStart(2, '0')}</span>
 									{step.title}
 								</a>
@@ -72,6 +72,13 @@ const overviewHref = `/labs/${lab.id}/`;
 			</nav>
 			<div class="lab-body">
 				<slot />
+				{
+					currentId !== 'overview' && (
+						<button type="button" class="button secondary step-done" data-step-done aria-pressed="false" hidden>
+							Mark this step done
+						</button>
+					)
+				}
 				<nav class="pager" aria-label="Step">
 					{
 						prev ? (
@@ -98,3 +105,7 @@ const overviewHref = `/labs/${lab.id}/`;
 		</div>
 	</div>
 </article>
+
+<script>
+	import '../scripts/tutorial.js';
+</script>
