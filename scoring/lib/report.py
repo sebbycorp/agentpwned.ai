@@ -15,6 +15,7 @@ COLUMNS = (
     "egress_denies",
     "canary_token_hits",
     "legit_api_injected",
+    "atenet_dataplane",
     "exercise_pass",
     "injection_demo",
 )

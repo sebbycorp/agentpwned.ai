@@ -46,8 +46,40 @@ if (existsSync(lab01Path)) {
 	const lab01 = readFileSync(lab01Path, 'utf8');
 	if (!lab01.includes('>Draft<')) errors.push('Lab 01 page does not show Draft from lab.md');
 	if (lab01.includes('Coming soon')) errors.push('Lab 01 page is still marked coming soon');
-	if (!lab01.includes('arm-a-up.sh')) errors.push('Lab 01 page is not rendering labs/01-secret-exfiltration/README.md');
-	if (!lab01.includes('id="attack"')) errors.push('Lab 01 page is missing the Attack section');
+	if (!lab01.includes('/labs/01-secret-exfiltration/01-why-this-lab/')) {
+		errors.push('Lab 01 overview does not link to step 1');
+	}
+	if (!lab01.includes('>Next<')) errors.push('Lab 01 overview is missing the Next control');
+	if (!lab01.includes('>Overview<')) errors.push('Lab 01 overview is missing the step list');
+}
+
+const step1Path = join(dist, 'labs/01-secret-exfiltration/01-why-this-lab/index.html');
+const setupPath = join(dist, 'labs/01-secret-exfiltration/03-bring-up-arm-a/index.html');
+const defendPath = join(dist, 'labs/01-secret-exfiltration/06-defend-with-substrate/index.html');
+const lastPath = join(dist, 'labs/01-secret-exfiltration/08-cleanup-and-recap/index.html');
+for (const relativePath of [
+	'labs/01-secret-exfiltration/01-why-this-lab/index.html',
+	'labs/01-secret-exfiltration/08-cleanup-and-recap/index.html',
+]) {
+	if (!existsSync(join(dist, relativePath))) errors.push(`missing dist/${relativePath}`);
+}
+if (existsSync(step1Path)) {
+	const step1 = readFileSync(step1Path, 'utf8');
+	if (!step1.includes('Step 1 of 8')) errors.push('Lab 01 step 1 is missing the progress label');
+	if (!step1.includes('>Back<') || !step1.includes('>Next<')) errors.push('Lab 01 step 1 is missing Back or Next');
+	if (!step1.includes('<svg')) errors.push('Lab 01 step 1 is missing the lightboard');
+	if (!step1.includes('fill="#000000"')) errors.push('Lab 01 lightboard is missing its black board');
+}
+if (existsSync(setupPath) && !readFileSync(setupPath, 'utf8').includes('arm-a-up.sh')) {
+	errors.push('Lab 01 setup step is missing arm-a-up.sh');
+}
+if (existsSync(defendPath)) {
+	const defend = readFileSync(defendPath, 'utf8');
+	if (!defend.includes('agentgateway')) errors.push('Lab 01 defend step does not name agentgateway');
+	if (!defend.includes('name: Required value')) errors.push('Lab 01 defend step is missing the measured agentgateway error');
+}
+if (existsSync(lastPath) && !readFileSync(lastPath, 'utf8').includes('arm-b-down.sh')) {
+	errors.push('Lab 01 cleanup step is missing arm-b-down.sh');
 }
 
 if (errors.length > 0) {

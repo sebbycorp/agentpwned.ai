@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { Loader } from 'astro/loaders';
+import { rewriteTutorialLinks } from './tutorial';
 
 function parseFrontmatter(raw: string): { data: Record<string, string>; body: string } {
 	const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
@@ -61,7 +62,7 @@ export function labsLoader(): Loader {
 					const meta = parseFrontmatter(readFileSync(labFile, 'utf8'));
 					const id = meta.data.slug || entry.name;
 					const readme = readFileSync(readmeFile, 'utf8');
-					const body = stripTitle(readme);
+					const body = rewriteTutorialLinks(stripTitle(readme), id);
 					const summary = firstParagraph(readme);
 					if (!meta.data.title || !meta.data.status || !summary) {
 						throw new Error(`${entry.name}/lab.md needs title and status, and README.md needs an opening paragraph`);

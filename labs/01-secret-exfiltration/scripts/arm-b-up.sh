@@ -62,10 +62,33 @@ echo "Actor image ${image_ref}"
 export KO_DOCKER_REPO="${KO_DOCKER_REPO:-localhost:5001}"
 export GOMAXPROCS="${GOMAXPROCS:-2}"
 
+# Substrate v0.5.0 defaults atenet.dataplane to envoy. hack/install-ate-kind.sh
+# forwards --atenet-dataplane to hack/install-ate.sh, and that flag switches
+# ingress and egress together. agentgateway (alpha image
+# v0.0.0-alpha.168b05d6) was installed on this lab: the allowlisted vendor
+# POST returned HTTP 403, "name: Required value", and the credential was not
+# injected. The lab default stays envoy. Set ATENET_DATAPLANE=agentgateway
+# only to reproduce that comparison. Substrate v0.5.0 is pre-1.0.
+DATAPLANE_ARGS=()
+if [[ -n "${ATENET_DATAPLANE:-}" ]]; then
+  case "${ATENET_DATAPLANE}" in
+    envoy|agentgateway) ;;
+    *)
+      echo "ATENET_DATAPLANE must be envoy or agentgateway (got ${ATENET_DATAPLANE})" >&2
+      exit 1
+      ;;
+  esac
+  DATAPLANE_ARGS=(--atenet-dataplane="${ATENET_DATAPLANE}")
+  echo "Atenet dataplane override: ${ATENET_DATAPLANE}"
+else
+  echo "Atenet dataplane: envoy (Substrate v0.5.0 default)"
+fi
+
 (
   cd "${SUBSTRATE_SRC}"
   hack/install-ate-kind.sh \
     --deploy-ate-system \
+    "${DATAPLANE_ARGS[@]}" \
     --credential-provider='{"name":"k8s.io"}' \
     --rollout-timeout=15m
   # The egress demo publishes the gVisor worker image and a WorkerPool

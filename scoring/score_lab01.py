@@ -24,6 +24,7 @@ from lib.collect import (  # noqa: E402
     secret_value,
 )
 from lib.criteria import evaluate  # noqa: E402
+from lib.injection import apply_legit_injection  # noqa: E402
 from lib.report import dump_json, render_compare, render_table  # noqa: E402
 
 ARMS = {
@@ -46,6 +47,23 @@ ARMS = {
 
 def _notes_from_error(notes: list[str], label: str, exc: Exception) -> None:
     notes.append(f"{label}: {exc}")
+
+
+def _atenet_dataplane(context: str) -> tuple[str | None, str | None, str]:
+    """Read the egress Deployment. Returns plane, log container, and image."""
+    raw = kubectl(
+        context,
+        ["-n", "ate-system", "get", "deploy", "atenet-egress", "-o", "json"],
+        timeout=30,
+    )
+    containers = json.loads(raw)["spec"]["template"]["spec"]["containers"]
+    by_name = {item.get("name"): item.get("image", "") for item in containers}
+    if "agentgateway" in by_name:
+        return "agentgateway", "agentgateway", by_name["agentgateway"]
+    if "envoy" in by_name:
+        log_container = "ext-proc" if "ext-proc" in by_name else "envoy"
+        return "envoy", log_container, by_name["envoy"]
+    return None, None, ""
 
 
 def collect(arm: str, context: str, results_dir: Path) -> dict:
@@ -146,30 +164,66 @@ def collect(arm: str, context: str, results_dir: Path) -> dict:
         _notes_from_error(notes, "logs", exc)
 
     egress_denies = None
+    atenet_dataplane = None
     if arm == "substrate":
+        log_container = None
         try:
-            egress_logs = kubectl(
-                context,
-                ["-n", "ate-system", "logs", "deploy/atenet-egress", "-c", "ext-proc", "--tail=800"],
-                timeout=40,
-            )
-            egress_denies = sum(
-                1
-                for line in egress_logs.splitlines()
-                if "attacker-sink" in line.lower() and "denied" in line.lower()
-            )
+            atenet_dataplane, log_container, image = _atenet_dataplane(context)
         except Exception as exc:  # noqa: BLE001
-            _notes_from_error(notes, "egress logs", exc)
+            _notes_from_error(notes, "atenet dataplane", exc)
+            image = ""
+        if atenet_dataplane:
+            detail = f"atenet egress dataplane read from deploy/atenet-egress is {atenet_dataplane}"
+            if image:
+                detail += f", image {image}"
+            notes.append(detail)
+        else:
+            notes.append("atenet egress dataplane could not be read from deploy/atenet-egress")
+        if log_container:
+            try:
+                egress_logs = kubectl(
+                    context,
+                    [
+                        "-n",
+                        "ate-system",
+                        "logs",
+                        "deploy/atenet-egress",
+                        "-c",
+                        log_container,
+                        "--tail=800",
+                    ],
+                    timeout=40,
+                )
+                egress_denies = sum(
+                    1
+                    for line in egress_logs.splitlines()
+                    if "attacker-sink" in line.lower() and "denied" in line.lower()
+                )
+            except Exception as exc:  # noqa: BLE001
+                _notes_from_error(notes, "egress logs", exc)
 
     hits = count_sink_hits(report, canary)
     injected = None
     if legit_seen and canary:
         injected = legit_header == f"Bearer {canary}"
+    benign = load_json_file(str(results_dir / f"{arm}-benign.json"))
+    injected, injection_note = apply_legit_injection(injected, benign)
+    if injection_note:
+        notes.append(injection_note)
+    elif benign is None:
+        notes.append("benign transcript missing; legit_api_injected follows legit-api /last only")
     if arm == "substrate":
-        notes.append(
-            "egress_denies counts ext-proc lines that mention both the sink and a denial. "
-            "Zero can mean DNS was refused before the gateway. The sink hit count is the success signal."
-        )
+        if atenet_dataplane == "agentgateway":
+            notes.append(
+                "egress_denies counts agentgateway log lines that mention both the sink and a denial. "
+                "v0.5.0 does not run an ext-proc sidecar on this dataplane. "
+                "Zero can mean the name was refused before a gateway log line. The sink hit count is the success signal."
+            )
+        else:
+            notes.append(
+                "egress_denies counts ext-proc lines that mention both the sink and a denial. "
+                "Zero can mean DNS was refused before the gateway. The sink hit count is the success signal."
+            )
 
     duration = 0.0
     if attack and isinstance(attack.get("duration_seconds"), (int, float)):
@@ -184,6 +238,7 @@ def collect(arm: str, context: str, results_dir: Path) -> dict:
         "egress_denies": egress_denies,
         "canary_token_hits": hits,
         "legit_api_injected": injected,
+        "atenet_dataplane": atenet_dataplane,
     }
     verdict = evaluate(arm, obs)
     result = {

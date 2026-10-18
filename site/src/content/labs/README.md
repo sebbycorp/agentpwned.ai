@@ -7,8 +7,9 @@ The site publishes two kinds of lab entries.
 `labs/NN-short-name/` is the source when that folder exists. Lab 01 is the example.
 
 - `lab.md` frontmatter supplies `title`, `slug`, `status`, and optional `duration` and `difficulty`. The labs index shows `status` as written. `draft` is not "coming soon".
-- `README.md` is the page body. Include these level-2 headings, in order: Objectives, Prerequisites, Setup, Attack, Defend, Measure, Cleanup. Extra sections are allowed.
-- The URL is `/labs/NN-short-name/`.
+- `README.md` is the page body for a single-page lab. Include these level-2 headings, in order: Objectives, Prerequisites, Setup, Attack, Defend, Measure, Cleanup. Extra sections are allowed.
+- A walkthrough lab uses `steps/01-short-name.md` and onward. `README.md` stays a short overview and links to `steps/01-....md`. Each step has frontmatter `title` and `summary`, and Next and Back links. The site renders `/labs/NN-short-name/` plus `/labs/NN-short-name/01-short-name/`. Lab 01 is the example. Lightboard SVG frames live in `diagrams/` and are drawn by `diagrams/generate.mjs`.
+- The URL of the overview is `/labs/NN-short-name/`.
 - Do not keep a same-named file in this folder. The build rejects that duplicate.
 
 ## A placeholder

@@ -6,7 +6,7 @@ Everything here runs on a local kind cluster, with canary secrets only. See [SEC
 
 ## Labs
 
-- [Lab 01: Secret Exfiltration](labs/01-secret-exfiltration/README.md). Status comes from [lab.md](labs/01-secret-exfiltration/lab.md) and is `draft`. Arm A gives the agent a canary key. Arm B runs the same agent as an [Agent Substrate](https://github.com/agent-substrate/substrate) actor: the actor does not hold the key, an egress allowlist blocks the sink, and the gateway injects the key only toward the allowlisted vendor API. The lab does not use a `SandboxAgent` CRD.
+- [Lab 01: Secret Exfiltration](labs/01-secret-exfiltration/README.md). Status comes from [lab.md](labs/01-secret-exfiltration/lab.md) and is `draft`. The student pages are the step files under `labs/01-secret-exfiltration/steps/`. Arm A gives the agent a canary key. Arm B runs the same agent as an [Agent Substrate](https://github.com/agent-substrate/substrate) actor: the actor does not hold the key, an egress allowlist blocks the sink, and the gateway injects the key only toward the allowlisted vendor API. The default egress dataplane is Envoy. The lab does not use a `SandboxAgent` CRD.
 
 The site renders Lab 01 from those files. Later labs can stay as placeholders in the site until a `labs/` folder exists.
 
@@ -54,7 +54,7 @@ That runs the scoring unit tests. The `make lab01-*` targets bring clusters up a
 A lab the site publishes is a folder under `labs/`:
 
 1. Add `labs/NN-short-name/lab.md` with frontmatter: `title`, `slug`, `status`, and optional `duration` and `difficulty`. The site shows `status` as written. `draft` is not "coming soon".
-2. Add `labs/NN-short-name/README.md`. Include these level-2 headings, in order: Objectives, Prerequisites, Setup, Attack, Defend, Measure, Cleanup. Extra sections are allowed. The site renders this file at `/labs/NN-short-name/`.
+2. Add `labs/NN-short-name/README.md`. A single-page lab includes these level-2 headings, in order: Objectives, Prerequisites, Setup, Attack, Defend, Measure, Cleanup. Extra sections are allowed. A walkthrough lab keeps that file as a short overview and puts one step per file in `steps/01-name.md`, with Next and Back links. The site renders the overview at `/labs/NN-short-name/` and each step at `/labs/NN-short-name/01-name/`. Lab 01 is the walkthrough example.
 3. Do not also keep `site/src/content/labs/NN-short-name.md`. The repo lab replaces that placeholder.
 4. From `site/`, run `npm run build`.
 

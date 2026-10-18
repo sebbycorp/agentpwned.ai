@@ -1,0 +1,100 @@
+---
+import { badgeClass, labNumber, statusLabel, type LabEntry } from '../lib/labs';
+
+interface StepLink {
+	href: string;
+	title: string;
+	order: number;
+	id: string;
+}
+
+interface Props {
+	lab: LabEntry;
+	progress: string;
+	heading: string;
+	lede?: string;
+	steps: StepLink[];
+	currentId: string;
+	prev?: { href: string; title: string } | null;
+	next?: { href: string; title: string } | null;
+}
+
+const { lab, progress, heading, lede, steps, currentId, prev = null, next = null } = Astro.props;
+const number = labNumber(lab.data.order);
+const overviewHref = `/labs/${lab.id}/`;
+---
+
+<article class="lab tutorial">
+	<div class="wrap">
+		<nav class="crumbs" aria-label="Breadcrumb">
+			<a href="/labs/">Labs</a>
+			<span aria-hidden="true">/</span>
+			<a href={overviewHref}>Lab {number}</a>
+			<span aria-hidden="true">/</span>
+			<span>{progress}</span>
+		</nav>
+		<header class="lab-head">
+			<p class="kicker">
+				<span>Lab {number}</span>
+				<span class={badgeClass(lab.data.status)}>{statusLabel(lab.data.status)}</span>
+				<span>{progress}</span>
+				{lab.data.duration && <span>{lab.data.duration}</span>}
+			</p>
+			<h1>{heading}</h1>
+			{lede && <p class="lede">{lede}</p>}
+			{
+				lab.data.status === 'draft' && (
+					<p class="banner note" role="status">
+						Draft. Run it only on a local kind cluster, with canary secrets.
+					</p>
+				)
+			}
+			<p class="safety">Repo path: labs/{lab.id}. All lab attacks run only on a local kind cluster.</p>
+		</header>
+		<div class="lab-layout">
+			<nav class="section-nav step-nav" aria-label="Tutorial steps">
+				<p class="kicker">Steps</p>
+				<ol>
+					<li>
+						<a href={overviewHref} aria-current={currentId === 'overview' ? 'step' : undefined}>Overview</a>
+					</li>
+					{
+						steps.map((step) => (
+							<li>
+								<a href={step.href} aria-current={step.id === currentId ? 'step' : undefined}>
+									<span class="step-index">{String(step.order).padStart(2, '0')}</span>
+									{step.title}
+								</a>
+							</li>
+						))
+					}
+				</ol>
+			</nav>
+			<div class="lab-body">
+				<slot />
+				<nav class="pager" aria-label="Step">
+					{
+						prev ? (
+							<a class="button secondary" href={prev.href}>
+								Back
+								<span>{prev.title}</span>
+							</a>
+						) : (
+							<span></span>
+						)
+					}
+					{
+						next ? (
+							<a class="button pager-next" href={next.href}>
+								Next
+								<span>{next.title}</span>
+							</a>
+						) : (
+							<span></span>
+						)
+					}
+				</nav>
+			</div>
+		</div>
+	</div>
+</article>

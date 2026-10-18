@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
+import TutorialShell from '../../components/TutorialShell.astro';
 import Base from '../../layouts/Base.astro';
 import { badgeClass, labNumber, statusLabel } from '../../lib/labs';
 
@@ -16,9 +17,32 @@ const { Content, headings } = await render(lab);
 const number = labNumber(lab.data.order);
 const label = lab.data.kind === 'template' ? 'Template' : `Lab ${number}`;
 const sections = headings.filter((heading) => heading.depth === 2);
+const tutorialSteps = (await getCollection('steps'))
+	.filter((step) => step.data.lab === lab.id)
+	.sort((a, b) => a.data.order - b.data.order)
+	.map((step) => ({
+		href: `/labs/${lab.id}/${step.id.slice(lab.id.length + 1)}/`,
+		title: step.data.title,
+		order: step.data.order,
+		id: step.id,
+	}));
+const firstStep = tutorialSteps[0];
 ---
 
 <Base title={`${label}: ${lab.data.title}`} description={lab.data.summary} current={lab.data.kind === 'template' ? 'template' : 'lab'}>
+	{
+		firstStep ? (
+			<TutorialShell
+				lab={lab}
+				progress="Overview"
+				heading={lab.data.title}
+				steps={tutorialSteps}
+				currentId="overview"
+				next={{ href: firstStep.href, title: firstStep.title }}
+			>
+				<Content />
+			</TutorialShell>
+		) : (
 	<article class="lab">
 		<div class="wrap">
 			<nav class="crumbs" aria-label="Breadcrumb">
@@ -92,4 +116,6 @@ const sections = headings.filter((heading) => heading.depth === 2);
 			</div>
 		</div>
 	</article>
+		)
+	}
 </Base>

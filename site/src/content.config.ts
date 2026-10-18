@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { z } from 'astro/zod';
 import { labsLoader } from './lib/labs-loader';
+import { stepsLoader } from './lib/steps-loader';
 
 const labs = defineCollection({
 	loader: labsLoader(),
@@ -15,4 +16,14 @@ const labs = defineCollection({
 	}),
 });
 
-export const collections = { labs };
+const steps = defineCollection({
+	loader: stepsLoader(),
+	schema: z.object({
+		title: z.string().min(1),
+		summary: z.string().min(1),
+		lab: z.string().min(1),
+		order: z.number().int().positive(),
+	}),
+});
+
+export const collections = { labs, steps };
