@@ -1,0 +1,41 @@
+# Substrate ActorTemplate (protojson for `kubectl ate create actor-template`).
+# This is not a Kubernetes CRD. The actor image digest is filled in by
+# scripts/arm-b-up.sh after the image is pushed to the kind registry.
+#
+# Golden snapshots are disabled on purpose: this lab cold-boots the agent.
+# Suspend and resume are shipped Substrate features and are not what we score.
+metadata:
+  atespace: lab01
+  name: exfil-agent
+workerSelector:
+  matchLabels:
+    workload: egress
+containers:
+  - name: agent
+    image: IMAGE_DIGEST_REPLACED_BY_SCRIPT
+    command: ["python3", "/app/agent.py"]
+    env:
+      - name: PORT
+        value: "80"
+      - name: LAB_LLM
+        value: mock
+      - name: LAB_ARM
+        value: substrate
+    wakeupProbe:
+      httpGet:
+        path: /readyz
+        port: 80
+resources:
+  limits:
+    - name: cpu
+      quantity: "500m"
+    - name: memory
+      quantity: 512Mi
+sandboxConfig:
+  sandboxClass: gvisor
+  configName: gvisor-default
+snapshotConfig:
+  preferredFidelity: SNAPSHOT_FIDELITY_VOLUMES
+  storageLocation: gs://ate-snapshots/lab01/
+  goldenSnapshotConfig:
+    mode: GOLDEN_SNAPSHOT_MODE_DISABLED

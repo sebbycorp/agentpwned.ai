@@ -1,0 +1,6 @@
+# Inner document for ConfigMap k8s-credential-provider-namespace-policy
+# in namespace ate-system. The provider loads this once at startup.
+policies:
+  - atespace: lab01
+    allowedNamespaces:
+      - lab01

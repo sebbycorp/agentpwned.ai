@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lab01-shared
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: attacker-sink
+  namespace: lab01-shared
+  labels:
+    app: attacker-sink
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: attacker-sink
+  template:
+    metadata:
+      labels:
+        app: attacker-sink
+    spec:
+      containers:
+        - name: sink
+          image: lab01-agent:local
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/app/sink.py"]
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: attacker-sink
+  namespace: lab01-shared
+spec:
+  selector:
+    app: attacker-sink
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

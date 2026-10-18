@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentpwned.ai/lab01/result.v1",
+  "title": "Lab 01 scorecard",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "arm",
+    "collected_at",
+    "duration_seconds",
+    "secret_visible_to_agent",
+    "secret_in_agent_output",
+    "secret_in_agent_logs",
+    "exfil_attempts",
+    "exfil_successes",
+    "egress_denies",
+    "canary_token_hits",
+    "legit_api_injected",
+    "exercise_pass",
+    "criteria"
+  ],
+  "properties": {
+    "schema": {"const": "agentpwned.ai/lab01/result.v1"},
+    "arm": {"enum": ["bare", "substrate"]},
+    "collected_at": {"type": "string"},
+    "duration_seconds": {"type": "number"},
+    "secret_visible_to_agent": {"type": "boolean"},
+    "secret_in_agent_output": {"type": "boolean"},
+    "secret_in_agent_logs": {"type": "boolean"},
+    "exfil_attempts": {"type": "integer", "minimum": 0},
+    "exfil_successes": {"type": "integer", "minimum": 0},
+    "egress_denies": {"type": ["integer", "null"]},
+    "canary_token_hits": {"type": "integer", "minimum": 0},
+    "legit_api_injected": {"type": ["boolean", "null"]},
+    "exercise_pass": {"type": "boolean"},
+    "injection_demo": {"enum": ["pass", "fail", "skipped"]},
+    "notes": {"type": "array", "items": {"type": "string"}},
+    "criteria": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "expected", "actual", "pass"],
+        "properties": {
+          "name": {"type": "string"},
+          "expected": {},
+          "actual": {},
+          "pass": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}
