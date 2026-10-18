@@ -1,0 +1,60 @@
+---
+import LabCard from '../../components/LabCard.astro';
+import Base from '../../layouts/Base.astro';
+import { getLabs } from '../../lib/labs';
+
+const labs = await getLabs();
+---
+
+<Base
+	title="Labs"
+	description="Labs that compare a bare agent with a sandboxed one. Lab 01, Secret Exfiltration, is coming soon."
+	current="labs"
+>
+	<section class="section lab">
+		<div class="wrap">
+			<p class="kicker">Index</p>
+			<h1>Labs</h1>
+			<p class="lede">
+				Educate by doing. Each lab attacks a bare agent, repeats the attack inside a sandbox, and scores the
+				difference. All lab attacks run only in isolated, local lab environments.
+			</p>
+			<ul class="lab-grid">
+				{
+					labs.map((lab) => (
+						<li>
+							<LabCard lab={lab} level={2} />
+						</li>
+					))
+				}
+			</ul>
+
+			<div class="panel author">
+				<h2>Add a lab</h2>
+				<p>
+					A lab is one markdown file. The build checks the headings, so a new page picks up the same shape as the
+					<a href="/labs/template/">page template</a>.
+				</p>
+				<ol>
+					<li>
+						Copy <code>site/src/content/labs/template.md</code> to <code>site/src/content/labs/NN-short-name.md</code>.
+						<code>NN</code> is the next two-digit number. The file name is the URL, so
+						<code>04-egress-notes.md</code> is served at <code>/labs/04-egress-notes/</code>.
+					</li>
+					<li>
+						Set <code>title</code>, <code>summary</code>, <code>order</code>, <code>status</code>
+						(<code>coming-soon</code> or <code>available</code>), and <code>kind: lab</code>.
+					</li>
+					<li>
+						Keep these seven level-2 headings, in order: Objectives, Prerequisites, Setup, Attack, Defend, Measure,
+						Cleanup. Replace the template guidance with the lab.
+					</li>
+					<li>
+						From <code>site/</code>, run <code>npm run build</code>. The build fails if a heading is missing, or if
+						site copy contains an em dash or an en dash.
+					</li>
+				</ol>
+			</div>
+		</div>
+	</section>
+</Base>

@@ -1,0 +1,80 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { LAB_SECTIONS, labNumber, sectionId, statusLabel } from '../../lib/labs';
+
+export async function getStaticPaths() {
+	const labs = await getCollection('labs');
+	return labs.map((lab) => ({
+		params: { slug: lab.id },
+		props: { lab },
+	}));
+}
+
+const { lab } = Astro.props;
+const { Content } = await render(lab);
+const number = labNumber(lab.data.order);
+const label = lab.data.kind === 'template' ? 'Template' : `Lab ${number}`;
+const badgeClass =
+	lab.data.status === 'available' ? 'badge ready' : lab.data.status === 'template' ? 'badge template' : 'badge';
+---
+
+<Base title={`${label}: ${lab.data.title}`} description={lab.data.summary} current={lab.data.kind === 'template' ? 'template' : 'lab'}>
+	<article class="lab">
+		<div class="wrap">
+			<nav class="crumbs" aria-label="Breadcrumb">
+				<a href="/labs/">Labs</a>
+				<span aria-hidden="true">/</span>
+				<span>{label}</span>
+			</nav>
+			<header class="lab-head">
+				<p class="kicker">
+					<span>{label}</span>
+					<span class={badgeClass}>{statusLabel(lab.data.status)}</span>
+				</p>
+				<h1>{lab.data.title}</h1>
+				<p class="lede">{lab.data.summary}</p>
+				{
+					lab.data.status === 'coming-soon' && (
+						<p class="banner" role="status">
+							Coming soon. The runnable steps are not published yet. When they land, they run only in an isolated local
+							lab.
+						</p>
+					)
+				}
+				{
+					lab.data.status === 'available' && (
+						<p class="banner" role="status">
+							Ready to run. All lab attacks run only in isolated, local lab environments.
+						</p>
+					)
+				}
+				{
+					lab.data.kind === 'template' && (
+						<p class="banner note">
+							Author template. Copy this file when you add a lab. Readers do not run this page.
+						</p>
+					)
+				}
+				{lab.data.kind === 'lab' && <p class="safety">All lab attacks run only in isolated, local lab environments.</p>}
+			</header>
+			<div class="lab-layout">
+				<nav class="section-nav" aria-label="Lab sections">
+					<p class="kicker">On this page</p>
+					<ol>
+						{
+							LAB_SECTIONS.map((section) => (
+								<li>
+									<a href={`#${sectionId(section)}`}>{section}</a>
+								</li>
+							))
+						}
+					</ol>
+				</nav>
+				<div class="lab-body">
+					<Content />
+				</div>
+			</div>
+		</div>
+	</article>
+</Base>
