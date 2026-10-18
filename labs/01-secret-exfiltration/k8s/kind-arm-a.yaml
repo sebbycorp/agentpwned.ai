@@ -1,0 +1,11 @@
+# Arm A kind cluster.
+# kubeProxyMode nftables avoids the iptables "statistic" match. Some kernels
+# (including the one this lab was authored on, 6.12.94+) reject that match,
+# and then ClusterIP and in-cluster DNS never work. nftables mode is a kind
+# setting, not a Substrate feature. kind 0.27+ accepts it.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  kubeProxyMode: nftables
+nodes:
+  - role: control-plane

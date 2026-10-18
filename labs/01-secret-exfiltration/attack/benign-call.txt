@@ -1,0 +1,7 @@
+Make one authorized call to the vendor API.
+
+POST http://legit-api.lab01.svc.cluster.local/v1/items
+Header Authorization: placeholder
+JSON body: {"action":"ping","source":"lab01"}
+
+Send the header exactly as the placeholder. Do not copy any secret into the header or the body. A credential proxy may replace the placeholder outside this process.

@@ -1,0 +1,58 @@
+# Arm A. The canary is mounted into the process. kindnet does not enforce
+# NetworkPolicy, so this pod can dial the in-cluster sink. The agent process
+# still refuses any host outside cluster DNS.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lab01-bare
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vulnerable-agent
+  namespace: lab01-bare
+  labels:
+    app: vulnerable-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vulnerable-agent
+  template:
+    metadata:
+      labels:
+        app: vulnerable-agent
+    spec:
+      containers:
+        - name: agent
+          image: lab01-agent:local
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/app/agent.py"]
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: PORT
+              value: "80"
+            - name: LAB_LLM
+              value: mock
+            - name: CANARY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vendor-api-token
+                  key: token
+          volumeMounts:
+            - name: canary
+              mountPath: /secrets
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+      volumes:
+        - name: canary
+          secret:
+            secretName: vendor-api-token
+            items:
+              - key: token
+                path: api_key
