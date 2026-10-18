@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" class="run">
+<title>Tools on the machine</title>
+<style>
+  text { font-family: "IBM Plex Sans", "Segoe UI", sans-serif; }
+  .pulse { stroke-dasharray: 18 30; }
+  .token { offset-rotate: 0deg; offset-distance: 100%; }
+  .token.green { offset-path: path("M155 250 L370 250 L820 110"); }
+  .token.leak { offset-path: path("M155 400 L155 470 L820 470 L820 400"); }
+  @media (prefers-reduced-motion: no-preference) {
+    .run .pulse { animation: flow 1.15s linear infinite; }
+    .run .token { animation: travel 2.4s linear infinite; }
+  }
+  @keyframes flow { to { stroke-dashoffset: -96; } }
+  @keyframes travel { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+</style>
+<rect width="960" height="540" fill="#000000"/>
+<rect x="40" y="150" width="250" height="240" rx="10" fill="#000000" stroke="#f4f1ea" stroke-width="1.75"/><text x="165" y="264" fill="#f4f1ea" font-size="20" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">agent</text><text x="165" y="288" fill="#f4f1ea" font-size="14" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">process</text>
+<rect x="360" y="80" width="220" height="80" rx="10" fill="#000000" stroke="#f4f1ea" stroke-width="1.75"/><text x="470" y="114" fill="#f4f1ea" font-size="20" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">env</text><text x="470" y="138" fill="#f4f1ea" font-size="14" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">CANARY_API_KEY</text>
+<rect x="360" y="200" width="220" height="80" rx="10" fill="#000000" stroke="#f4f1ea" stroke-width="1.75"/><text x="470" y="234" fill="#f4f1ea" font-size="20" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">file</text><text x="470" y="258" fill="#f4f1ea" font-size="14" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">/secrets/api_key</text>
+<rect x="360" y="320" width="220" height="80" rx="10" fill="#000000" stroke="#f4f1ea" stroke-width="1.75"/><text x="470" y="354" fill="#f4f1ea" font-size="20" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">socket</text><text x="470" y="378" fill="#f4f1ea" font-size="14" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">http_post</text>
+</svg>

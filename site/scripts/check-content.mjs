@@ -119,6 +119,12 @@ if (statSync(repoLabs, { throwIfNoEntry: false })?.isDirectory()) {
 				if (!field(fence[1], 'title') || !field(fence[1], 'summary')) {
 					errors.push(`${name}/steps/${file} needs title and summary`);
 				}
+				for (const key of ['canary', 'sink', 'legit', 'plane']) {
+					if (!field(fence[1], key)) errors.push(`${name}/steps/${file} needs ${key}`);
+				}
+				if (!text.includes('../diagrams/')) {
+					errors.push(`${name}/steps/${file} needs a diagram`);
+				}
 				if (index === 0 && !text.includes('(../README.md)')) {
 					errors.push(`${name}/steps/${file} must link back to ../README.md`);
 				}
@@ -127,18 +133,6 @@ if (statSync(repoLabs, { throwIfNoEntry: false })?.isDirectory()) {
 				}
 				if (index < stepFiles.length - 1 && !text.includes(`(${stepFiles[index + 1]})`)) {
 					errors.push(`${name}/steps/${file} must link onward to ${stepFiles[index + 1]}`);
-				}
-				for (const section of [
-					'What we are about to do',
-					'Why it matters',
-					'Command',
-					'On the board',
-					'What you should see',
-					'Checkpoint',
-				]) {
-					if (!text.includes(`## ${section}`)) {
-						errors.push(`${name}/steps/${file} is missing ## ${section}`);
-					}
 				}
 			});
 		} else {

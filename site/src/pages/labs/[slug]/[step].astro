@@ -55,6 +55,12 @@ const next = index < links.length - 1 ? { href: links[index + 1].href, title: li
 		lede={step.data.summary}
 		steps={links}
 		currentId={step.id}
+		status={{
+			canary: step.data.canary,
+			sink: step.data.sink,
+			legit: step.data.legit,
+			plane: step.data.plane,
+		}}
 		prev={prev}
 		next={next}
 	>

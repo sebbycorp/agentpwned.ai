@@ -1,243 +1,106 @@
 #!/usr/bin/env node
 /**
- * Lightboard frames for Lab 01.
+ * Crisp lightboard frames for Lab 01.
  *
- * Black board, white chalk, neon green for an allowed hop, red for a blocked hop.
- * Rough strokes come from roughjs. Lettering is Caveat, converted to paths so the
- * SVG does not depend on a webfont at view time.
- *
- * Regenerate from the repo root (after `npm ci` in site/):
+ * Solid black board. Thin white strokes. Neon green means the hop was allowed.
+ * Red means it was blocked. Labels are plain text, not a rough.js fill.
+ * The old rough.js hachure covered the board and made the words unreadable.
  *
  *   node labs/01-secret-exfiltration/diagrams/generate.mjs
- *
- * Frames grow in order: agent, plus the key, plus injection, plus the exfil arrow.
- * Each shape uses a fixed roughjs seed so a rerun stays stable.
  */
 
-import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeFileSync } from 'node:fs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const require = createRequire(new URL('../../../site/package.json', import.meta.url));
-const rough = require('roughjs');
-const opentype = require('opentype.js');
-
-const fontPath = join(
-	here,
-	'../../../site/node_modules/@fontsource/caveat/files/caveat-latin-400-normal.woff',
-);
-const font = opentype.loadSync(fontPath);
-const generator = rough.generator();
-
 const INK = '#f4f1ea';
 const GREEN = '#39ff14';
 const RED = '#ff3b30';
-const WIDTH = 960;
-const HEIGHT = 540;
+const W = 960;
+const H = 540;
 
-function opsToD(ops) {
-	let d = '';
-	for (const step of ops) {
-		const n = step.data.map((value) => Number(value).toFixed(1));
-		if (step.op === 'move') d += `M${n[0]} ${n[1]}`;
-		else if (step.op === 'lineTo') d += `L${n[0]} ${n[1]}`;
-		else if (step.op === 'bcurveTo') d += `C${n[0]} ${n[1]} ${n[2]} ${n[3]} ${n[4]} ${n[5]}`;
-		else if (step.op === 'qcurveTo') d += `Q${n[0]} ${n[1]} ${n[2]} ${n[3]}`;
-		else throw new Error(`unknown rough op ${step.op}`);
-	}
-	return d;
+function text(x, y, body, size, fill) {
+	const safe = String(body)
+		.replaceAll('&', '&amp;')
+		.replaceAll('<', '&lt;')
+		.replaceAll('>', '&gt;');
+	return `<text x="${x}" y="${y}" fill="${fill}" font-size="${size}" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">${safe}</text>`;
 }
 
-function stroke(drawable, color, width, delay) {
-	return drawable.sets
-		.map((set) => {
-			const d = opsToD(set.ops);
-			return `<path d="${d}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round" style="--d:${delay}s"/>`;
-		})
-		.join('\n');
+function box(x, y, w, h, stroke) {
+	return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12" fill="#000000" stroke="${stroke}" stroke-width="1.75"/>`;
 }
 
-function chalk(text, x, y, size, color) {
-	const path = font.getPath(text, x, y, size);
-	const svg = path.toSVG(1);
-	return svg.replace('<path ', `<path fill="${color}" `);
+function label(x, y, w, h, title, sub, stroke) {
+	const ty = sub ? y + h / 2 - 4 : y + h / 2 + 8;
+	return [box(x, y, w, h, stroke), text(x + w / 2, ty, title, 28, stroke), sub ? text(x + w / 2, ty + 28, sub, 16, stroke) : ''].join('');
 }
 
-function centered(text, cx, baseline, size, color) {
-	const width = font.getAdvanceWidth(text, size);
-	return chalk(text, cx - width / 2, baseline, size, color);
-}
-
-function box(x, y, w, h, seed, color) {
-	const drawable = generator.rectangle(x, y, w, h, {
-		roughness: 1.65,
-		bowing: 1.15,
-		stroke: color,
-		strokeWidth: 2.4,
-		seed,
-		fill: 'none',
-	});
-	return stroke(drawable, color, 2.4, (seed % 20) * 0.06);
-}
-
-function line(x1, y1, x2, y2, seed, color, width = 2.4) {
-	const drawable = generator.line(x1, y1, x2, y2, {
-		roughness: 1.5,
-		bowing: 0.8,
-		stroke: color,
-		strokeWidth: width,
-		seed,
-	});
-	return stroke(drawable, color, width, (seed % 20) * 0.06);
-}
-
-function arrow(x1, y1, x2, y2, seed, color) {
+function arrow(x1, y1, x2, y2, stroke) {
 	const angle = Math.atan2(y2 - y1, x2 - x1);
-	const length = 18;
-	const spread = 2.55;
-	const parts = [line(x1, y1, x2, y2, seed, color, 2.6)];
-	parts.push(
-		line(
-			x2,
-			y2,
-			x2 - length * Math.cos(angle - spread),
-			y2 - length * Math.sin(angle - spread),
-			seed + 1,
-			color,
-			2.6,
-		),
-	);
-	parts.push(
-		line(
-			x2,
-			y2,
-			x2 - length * Math.cos(angle + spread),
-			y2 - length * Math.sin(angle + spread),
-			seed + 2,
-			color,
-			2.6,
-		),
-	);
-	return parts.join('\n');
+	const size = 12;
+	const ax = x2 - size * Math.cos(angle - 0.45);
+	const ay = y2 - size * Math.sin(angle - 0.45);
+	const bx = x2 - size * Math.cos(angle + 0.45);
+	const by = y2 - size * Math.sin(angle + 0.45);
+	return `<path d="M${x1} ${y1} L${x2} ${y2} M${ax} ${ay} L${x2} ${y2} L${bx} ${by}" fill="none" stroke="${stroke}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>`;
 }
 
-function cross(cx, cy, seed, color) {
-	const r = 16;
-	return [line(cx - r, cy - r, cx + r, cy + r, seed, color, 2.8), line(cx - r, cy + r, cx + r, cy - r, seed + 1, color, 2.8)].join(
-		'\n',
-	);
-}
-
-function frame(number, body, title, description) {
-	const border = box(18, 18, WIDTH - 36, HEIGHT - 36, 2, INK);
-	const heading = chalk('secret exfiltration', 46, 62, 28, INK);
-	const mark = chalk(`frame ${number}`, 760, 62, 26, INK);
-	const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="img">
+function frame(title, body) {
+	return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
 <title>${title}</title>
-<desc>${description}</desc>
-<rect width="${WIDTH}" height="${HEIGHT}" fill="#000000"/>
-${border}
-${heading}
-${mark}
+<rect width="${W}" height="${H}" fill="#000000"/>
+<rect x="18" y="18" width="${W - 36}" height="${H - 36}" rx="16" fill="#000000" stroke="${INK}" stroke-width="1.25"/>
+${text(150, 58, 'secret exfiltration', 18, INK)}
 ${body}
 </svg>
 `;
-	return svg;
 }
 
-function agentBox(label, caption) {
-	return [
-		box(70, 150, 280, 210, 11, INK),
-		centered(label, 210, 250, 58, INK),
-		centered(caption, 210, 310, 26, INK),
-	].join('\n');
-}
+const frames = {
+	'01-agent.svg': frame(
+		'The agent',
+		label(70, 160, 280, 180, 'agent', 'calls tools', INK) + text(640, 260, 'a process with a socket', 22, INK),
+	),
+	'02-secret.svg': frame(
+		'The canary is inside the agent',
+		[
+			label(70, 150, 300, 220, 'agent', '', INK),
+			label(112, 250, 216, 80, 'canary', '', GREEN),
+			text(680, 260, 'the key is in the process', 22, INK),
+		].join(''),
+	),
+	'03-injection.svg': frame(
+		'Envoy injects the key. The sink stays blocked.',
+		[
+			label(48, 180, 220, 150, 'actor', 'no canary', INK),
+			label(300, 48, 180, 70, 'canary', 'outside', INK),
+			label(300, 160, 230, 130, 'envoy', 'v0.5.0', INK),
+			label(620, 150, 200, 110, 'legit API', 'HTTP 200', GREEN),
+			label(620, 340, 200, 100, 'sink', 'blocked', RED),
+			arrow(268, 250, 300, 220, RED),
+			text(250, 210, 'blocked', 16, RED),
+		].join(''),
+	),
+	'04-exfil.svg': frame(
+		'Bare beside sandboxed',
+		[
+			text(250, 100, 'bare', 18, GREEN),
+			label(70, 140, 200, 120, 'agent', 'holds canary', INK),
+			label(70, 320, 200, 90, 'sink', 'HTTP 200', GREEN),
+			arrow(170, 260, 170, 320, GREEN),
+			text(700, 100, 'sandboxed', 18, RED),
+			label(560, 140, 220, 110, 'actor', 'no canary', INK),
+			label(560, 300, 250, 100, 'envoy', 'sink blocked', RED),
+			arrow(670, 250, 670, 300, RED),
+		].join(''),
+	),
+};
 
-const frames = [
-	{
-		file: '01-agent.svg',
-		number: '1',
-		title: 'Frame 1. The agent.',
-		description: 'A hand-drawn box labeled agent on a black board.',
-		body() {
-			return [
-				agentBox('agent', 'calls tools'),
-				centered('a process with a socket', 620, 270, 32, INK),
-			].join('\n');
-		},
-	},
-	{
-		file: '02-secret.svg',
-		number: '2',
-		title: 'Frame 2. The key is inside the agent.',
-		description: 'The agent box now contains a smaller box labeled key.',
-		body() {
-			return [
-				box(70, 150, 280, 210, 11, INK),
-				centered('agent', 210, 210, 48, INK),
-				box(112, 236, 196, 86, 21, INK),
-				centered('key', 210, 292, 40, INK),
-				centered('the key lives in the process', 640, 270, 30, INK),
-			].join('\n');
-		},
-	},
-	{
-		file: '03-injection.svg',
-		number: '3',
-		title: 'Frame 3. The gateway injects the key.',
-		description:
-			'The actor box has no key. A canary box sits outside it. A green arrow runs from egress to the legit API.',
-		body() {
-			return [
-				agentBox('actor', 'no key inside'),
-				box(400, 78, 180, 72, 31, INK),
-				centered('canary', 490, 126, 32, INK),
-				line(490, 150, 500, 188, 33, INK, 2.2),
-				box(390, 188, 220, 140, 41, INK),
-				centered('egress', 500, 270, 40, INK),
-				box(700, 178, 210, 150, 61, GREEN),
-				centered('legit API', 805, 252, 32, GREEN),
-				centered('allowlisted', 805, 292, 24, GREEN),
-				arrow(610, 258, 698, 252, 71, GREEN),
-				centered('injected', 654, 236, 26, GREEN),
-			].join('\n');
-		},
-	},
-	{
-		file: '04-exfil.svg',
-		number: '4',
-		title: 'Frame 4. The exfil hop is blocked.',
-		description:
-			'Frame 3 plus a red arrow from the actor toward a sink, crossed out and labeled blocked.',
-		body() {
-			return [
-				agentBox('actor', 'no key inside'),
-				box(400, 70, 170, 64, 31, INK),
-				centered('canary', 485, 112, 28, INK),
-				line(485, 134, 500, 176, 33, INK, 2.2),
-				box(390, 176, 210, 120, 41, INK),
-				centered('egress', 495, 248, 36, INK),
-				box(690, 150, 220, 120, 61, GREEN),
-				centered('legit API', 800, 210, 30, GREEN),
-				centered('allowlisted', 800, 244, 22, GREEN),
-				arrow(600, 230, 688, 210, 71, GREEN),
-				centered('injected', 640, 196, 22, GREEN),
-				box(690, 360, 220, 110, 81, RED),
-				centered('sink', 800, 425, 36, RED),
-				arrow(250, 360, 688, 410, 91, RED),
-				cross(470, 392, 101, RED),
-				centered('blocked', 470, 368, 26, RED),
-			].join('\n');
-		},
-	},
-];
-
-for (const item of frames) {
-	const svg = frame(item.number, item.body(), item.title, item.description);
-	const path = join(here, item.file);
+for (const [file, svg] of Object.entries(frames)) {
+	const path = join(here, file);
 	writeFileSync(path, svg);
 	console.log(`wrote ${path}`);
 }

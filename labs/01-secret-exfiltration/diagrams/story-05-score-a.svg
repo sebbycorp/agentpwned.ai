@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" class="run">
+<title>Arm A score still shows the leak</title>
+<style>
+  text { font-family: "IBM Plex Sans", "Segoe UI", sans-serif; }
+  .pulse { stroke-dasharray: 18 30; }
+  .token { offset-rotate: 0deg; offset-distance: 100%; }
+  .token.green { offset-path: path("M155 250 L370 250 L820 110"); }
+  .token.leak { offset-path: path("M155 400 L155 470 L820 470 L820 400"); }
+  @media (prefers-reduced-motion: no-preference) {
+    .run .pulse { animation: flow 1.15s linear infinite; }
+    .run .token { animation: travel 2.4s linear infinite; }
+  }
+  @keyframes flow { to { stroke-dashoffset: -96; } }
+  @keyframes travel { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+</style>
+<rect width="960" height="540" fill="#000000"/>
+<rect x="40" y="160" width="230" height="170" rx="10" fill="#000000" stroke="#f4f1ea" stroke-width="1.75"/><text x="155" y="239" fill="#f4f1ea" font-size="20" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">agent</text><text x="155" y="263" fill="#f4f1ea" font-size="14" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">process</text>
+<rect x="78" y="250" width="154" height="58" rx="10" fill="#000000" stroke="#39ff14" stroke-width="1.75"/><text x="155" y="285" fill="#39ff14" font-size="20" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">canary</text>
+<rect x="720" y="330" width="200" height="110" rx="10" fill="#000000" stroke="#39ff14" stroke-width="1.75"/><text x="820" y="379" fill="#39ff14" font-size="20" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">sink</text><text x="820" y="403" fill="#39ff14" font-size="14" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">HTTP 200</text>
+<path d="M155 400 L155 470 L820 470 L820 400" fill="none" stroke="#39ff14" stroke-width="2.25" stroke-linejoin="round"/>
+<path class="pulse" d="M155 400 L155 470 L820 470 L820 400" fill="none" stroke="#39ff14" stroke-width="2.25" stroke-linejoin="round"/>
+<text x="480" y="458" fill="#39ff14" font-size="16" text-anchor="middle" font-family="IBM Plex Sans, Segoe UI, sans-serif">leaked</text>
+<circle class="token leak" r="7" fill="#39ff14"/>
+</svg>
