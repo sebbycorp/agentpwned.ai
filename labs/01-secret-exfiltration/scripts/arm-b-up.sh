@@ -42,6 +42,10 @@ echo "Substrate checkout: $(git -C "${SUBSTRATE_SRC}" rev-parse HEAD) (${SUBSTRA
   cd "${SUBSTRATE_SRC}"
   hack/create-kind-cluster.sh
 )
+# Substrate's kind config uses kube-proxy iptables mode. On kernels that
+# reject the statistic match, ClusterIP never programs. Fix that before the
+# installer waits on Services.
+ensure_cluster_services "${ARM_B_CONTEXT}"
 
 echo "Building ${IMAGE_REGISTRY} and pushing it to the kind registry"
 docker build -t "${IMAGE_REGISTRY}" "${LAB_ROOT}/agent"

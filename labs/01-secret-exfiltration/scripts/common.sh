@@ -35,6 +35,24 @@ wait_rollout() {
   kubectl --context "${context}" -n "${namespace}" rollout status "deploy/${deploy}" --timeout=180s
 }
 
+# Kernels that reject the iptables statistic match leave kube-proxy unable to
+# program ClusterIP. In-cluster DNS then fails. Switch that cluster to the
+# nftables proxier. No-op when the failure is absent.
+ensure_cluster_services() {
+  local context="$1"
+  local logs
+  logs="$(kubectl --context "${context}" -n kube-system logs daemonset/kube-proxy --tail=100 2>/dev/null || true)"
+  if ! printf '%s\n' "${logs}" | grep -q 'Extension statistic revision 0'; then
+    return 0
+  fi
+  echo "kube-proxy iptables mode failed (statistic match unsupported). Switching to nftables."
+  kubectl --context "${context}" -n kube-system get configmap kube-proxy -o json \
+    | python3 -c 'import json,sys; cm=json.load(sys.stdin); cm["data"]["config.conf"]=cm["data"]["config.conf"].replace("mode: iptables","mode: nftables",1); json.dump(cm, sys.stdout)' \
+    | kubectl --context "${context}" apply -f -
+  kubectl --context "${context}" -n kube-system delete pod -l k8s-app=kube-proxy
+  kubectl --context "${context}" -n kube-system rollout status daemonset/kube-proxy --timeout=180s
+}
+
 # Refuse to post the lab prompt if it has been edited to name a non-cluster host.
 assert_prompt_is_cluster_local() {
   local file="$1"

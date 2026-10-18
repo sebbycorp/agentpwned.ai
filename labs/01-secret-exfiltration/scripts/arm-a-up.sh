@@ -14,8 +14,9 @@ docker build -t "${IMAGE_LOCAL}" "${LAB_ROOT}/agent"
 
 if ! kind get clusters | grep -qx "${ARM_A_CLUSTER}"; then
   echo "Creating kind cluster ${ARM_A_CLUSTER}"
-  kind create cluster --name "${ARM_A_CLUSTER}"
+  kind create cluster --name "${ARM_A_CLUSTER}" --config "${LAB_ROOT}/k8s/kind-arm-a.yaml"
 fi
+ensure_cluster_services "${ARM_A_CONTEXT}"
 
 echo "Loading image into ${ARM_A_CLUSTER}"
 kind load docker-image "${IMAGE_LOCAL}" --name "${ARM_A_CLUSTER}"

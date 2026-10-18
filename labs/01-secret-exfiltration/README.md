@@ -27,7 +27,7 @@ This lab does not teach attacks against systems you do not control. It does not 
 ## Prerequisites
 
 - Linux or macOS with Docker
-- kind 0.27.0 (Arm A). Arm B uses the kind binary Substrate's `hack/kind.sh` selects
+- kind 0.27.0 (Arm A). Arm B uses the kind binary Substrate's `hack/kind.sh` selects. Arm A's cluster config sets `kubeProxyMode: nftables` because some kernels reject kube-proxy's iptables statistic match and then ClusterIP and DNS do not work. Arm B's script switches to nftables only if it sees that failure
 - kubectl 1.32 or newer is a fine client for this lab
 - Python 3.11 or newer (stdlib only)
 - Arm B also needs Go **1.27 or newer**, git, and a checkout of [agent-substrate/substrate](https://github.com/agent-substrate/substrate) at tag `v0.5.0`
