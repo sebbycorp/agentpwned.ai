@@ -1,0 +1,63 @@
+---
+import { getCollection, render } from 'astro:content';
+import TutorialShell from '../../../components/TutorialShell.astro';
+import Base from '../../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+	const steps = await getCollection('steps');
+	const labs = await getCollection('labs');
+	const labsById = new Map(labs.map((lab) => [lab.id, lab]));
+	const grouped = new Map<string, typeof steps>();
+	for (const step of steps) {
+		const list = grouped.get(step.data.lab) ?? [];
+		list.push(step);
+		grouped.set(step.data.lab, list);
+	}
+
+	const paths = [];
+	for (const [labId, list] of grouped) {
+		const lab = labsById.get(labId);
+		if (!lab) continue;
+		const ordered = [...list].sort((a, b) => a.data.order - b.data.order);
+		ordered.forEach((step, index) => {
+			const stem = step.id.slice(labId.length + 1);
+			paths.push({
+				params: { slug: labId, step: stem },
+				props: { step, lab, siblings: ordered, index },
+			});
+		});
+	}
+	return paths;
+}
+
+const { step, lab, siblings, index } = Astro.props;
+const { Content } = await render(step);
+const total = siblings.length;
+const progress = `Step ${step.data.order} of ${total}`;
+const links = siblings.map((item) => ({
+	href: `/labs/${lab.id}/${item.id.slice(lab.id.length + 1)}/`,
+	title: item.data.title,
+	order: item.data.order,
+	id: item.id,
+}));
+const prev =
+	index === 0
+		? { href: `/labs/${lab.id}/`, title: 'Overview' }
+		: { href: links[index - 1].href, title: links[index - 1].title };
+const next = index < links.length - 1 ? { href: links[index + 1].href, title: links[index + 1].title } : null;
+---
+
+<Base title={`${progress}: ${step.data.title}`} description={step.data.summary} current="lab">
+	<TutorialShell
+		lab={lab}
+		progress={progress}
+		heading={step.data.title}
+		lede={step.data.summary}
+		steps={links}
+		currentId={step.id}
+		prev={prev}
+		next={next}
+	>
+		<Content />
+	</TutorialShell>
+</Base>

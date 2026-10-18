@@ -17,6 +17,7 @@
     "egress_denies",
     "canary_token_hits",
     "legit_api_injected",
+    "atenet_dataplane",
     "exercise_pass",
     "criteria"
   ],
@@ -33,6 +34,7 @@
     "egress_denies": {"type": ["integer", "null"]},
     "canary_token_hits": {"type": "integer", "minimum": 0},
     "legit_api_injected": {"type": ["boolean", "null"]},
+    "atenet_dataplane": {"type": ["string", "null"], "enum": ["envoy", "agentgateway", null]},
     "exercise_pass": {"type": "boolean"},
     "injection_demo": {"enum": ["pass", "fail", "skipped"]},
     "notes": {"type": "array", "items": {"type": "string"}},

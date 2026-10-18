@@ -7,4 +7,4 @@ npm install
 npm run dev
 ```
 
-Published labs are read from `../labs/*/lab.md` and `../labs/*/README.md`. Placeholders that do not have a repo folder yet live in `src/content/labs/`. See [src/content/labs/README.md](src/content/labs/README.md).
+Published labs are read from `../labs/*/lab.md` and `../labs/*/README.md`. A lab with `steps/*.md` is a multi-page tutorial. Placeholders that do not have a repo folder yet live in `src/content/labs/`. See [src/content/labs/README.md](src/content/labs/README.md).

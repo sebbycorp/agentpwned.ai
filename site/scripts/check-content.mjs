@@ -95,13 +95,61 @@ if (statSync(repoLabs, { throwIfNoEntry: false })?.isDirectory()) {
 		if (slug !== name) errors.push(`${name}/lab.md slug must match the folder name`);
 		publishedIds.add(name);
 		const readme = readFileSync(readmeFile, 'utf8');
-		let cursor = 0;
-		for (const line of readme.split(/\r?\n/)) {
-			const heading = line.match(/^##\s+(.+?)\s*$/);
-			if (heading && heading[1] === REQUIRED[cursor]) cursor += 1;
-		}
-		if (cursor !== REQUIRED.length) {
-			errors.push(`${name}/README.md must include these level-2 headings in order: ${REQUIRED.join(', ')}`);
+		const stepsDir = join(folder, 'steps');
+		const stepFiles = statSync(stepsDir, { throwIfNoEntry: false })?.isDirectory()
+			? readdirSync(stepsDir)
+					.filter((file) => /^\d\d-.+\.md$/.test(file))
+					.sort()
+			: [];
+		if (stepFiles.length > 0) {
+			if (!readme.includes(`(steps/${stepFiles[0]})`)) {
+				errors.push(`${name}/README.md must link to steps/${stepFiles[0]}`);
+			}
+			stepFiles.forEach((file, index) => {
+				const expected = String(index + 1).padStart(2, '0');
+				if (!file.startsWith(`${expected}-`)) {
+					errors.push(`${name}/steps/${file} breaks the 01, 02, ... sequence`);
+				}
+				const text = readFileSync(join(stepsDir, file), 'utf8');
+				const fence = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+				if (!fence) {
+					errors.push(`${name}/steps/${file} is missing frontmatter`);
+					return;
+				}
+				if (!field(fence[1], 'title') || !field(fence[1], 'summary')) {
+					errors.push(`${name}/steps/${file} needs title and summary`);
+				}
+				if (index === 0 && !text.includes('(../README.md)')) {
+					errors.push(`${name}/steps/${file} must link back to ../README.md`);
+				}
+				if (index > 0 && !text.includes(`(${stepFiles[index - 1]})`)) {
+					errors.push(`${name}/steps/${file} must link back to ${stepFiles[index - 1]}`);
+				}
+				if (index < stepFiles.length - 1 && !text.includes(`(${stepFiles[index + 1]})`)) {
+					errors.push(`${name}/steps/${file} must link onward to ${stepFiles[index + 1]}`);
+				}
+				for (const section of [
+					'What we are about to do',
+					'Why it matters',
+					'Command',
+					'On the board',
+					'What you should see',
+					'Checkpoint',
+				]) {
+					if (!text.includes(`## ${section}`)) {
+						errors.push(`${name}/steps/${file} is missing ## ${section}`);
+					}
+				}
+			});
+		} else {
+			let cursor = 0;
+			for (const line of readme.split(/\r?\n/)) {
+				const heading = line.match(/^##\s+(.+?)\s*$/);
+				if (heading && heading[1] === REQUIRED[cursor]) cursor += 1;
+			}
+			if (cursor !== REQUIRED.length) {
+				errors.push(`${name}/README.md must include these level-2 headings in order: ${REQUIRED.join(', ')}`);
+			}
 		}
 		const placeholder = join(siteRoot, 'src/content/labs', `${name}.md`);
 		if (statSync(placeholder, { throwIfNoEntry: false })?.isFile()) {

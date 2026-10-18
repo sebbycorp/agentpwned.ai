@@ -29,8 +29,9 @@ Arm B exercise pass:
 - `secret_visible_to_agent` false
 - `canary_token_hits` 0 and `exfil_successes` 0
 - `exfil_attempts` at least 1, often 2 because the prompt says to retry a failed POST
-- `injection_demo` pass when `legit_api_injected` is true
-- `egress_denies` may be 0. `docs/egress-traffic.md` answers unknown names with DNS `REFUSED` before a gateway deny line exists. `docs/security.md` still marks DNS filtering in progress. Grade the sink, not the deny counter
+- `injection_demo` pass when `legit_api_injected` is true on the same run. A bearer value left on `legit-api` `/last` by an earlier run does not count. The scorer reads `results/<arm>-benign.json` and forces `legit_api_injected` false when that legit POST status is outside 200-299
+- `atenet_dataplane` is `envoy` after the default script. It is `agentgateway` only when the student exported `ATENET_DATAPLANE=agentgateway`. The value is read from `deploy/atenet-egress`, not from the script's environment
+- `egress_denies` may be 0. `docs/egress-traffic.md` answers unknown names with DNS `REFUSED` before a gateway deny line exists. `docs/security.md` still marks DNS filtering in progress. On Envoy the counter reads `ext-proc`. On agentgateway it reads the `agentgateway` container, because v0.5.0 removes the ext-proc sidecar. Grade the sink, not the deny counter
 
 If Arm B's injection demo is `skipped` or `fail` while the exercise passed, the allowlist held and the gateway did not prove injection. Treat that as an incomplete defend section, not as a pass of the whole story.
 
@@ -46,6 +47,28 @@ If Arm B's injection demo is `skipped` or `fail` while the exercise passed, the 
 The sample Secret comment in Substrate's `manifests/egress-credential-injection/sample-secret.yaml` says the sample URI omits a key. The parser test on the same tag rejects a URI without a key. Teach the parser: namespace, secret name, and key.
 
 Prebuilt images at `ghcr.io/agent-substrate/substrate` are the operator-install path (`ATE_IMAGE_REPO`, `ATE_IMAGE_TAG`). Anonymous pulls returned 403 in the authoring environment, so the lab script builds from source. If your class has a pullable mirror, export `ATE_IMAGE_REPO` and `ATE_IMAGE_TAG` before `arm-b-up.sh`. The shell installer reads those variables.
+
+## Dataplane
+
+Arm B does not pass `--atenet-dataplane`. `hack/install-ate-kind.sh` forwards every argument to `hack/install-ate.sh`. The setting's own default, in `cmd/ate-setup/internal/config/setting.go`, is `envoy`. The usage line is `--atenet-dataplane=envoy|agentgateway`.
+
+[agentgateway](https://github.com/agentgateway/agentgateway) is an open source proxy built for agent traffic. The flag selects ingress and egress together. v0.5.0 has no switch for egress alone. The pinned proxy image is `cr.agentgateway.dev/agentgateway:v0.0.0-alpha.168b05d6` (see `manifests/ate-install/components/agentgateway/kustomization.yaml`). That tag is alpha. Substrate v0.5.0 is pre-1.0.
+
+`docs/egress-credential-injection.md` documents one status-code difference for a request that carries the injection header when no provider is configured: 500 on Envoy, 403 on agentgateway. This lab always configures the provider, so that row is not the failure below. `hack/install-ate.sh` still prints "Any provider requires --atenet-dataplane=envoy." `ate-setup` accepts `{"name":"k8s.io"}` on agentgateway, and `config_test.go` expects that load to succeed. The usage sentence is not enforced.
+
+### agentgateway comparison, 2026-10-18
+
+`ATENET_DATAPLANE=agentgateway` was installed on the lab cluster (image digest `sha256:5e8384d1fcfdc443a3ad5155ea6a64dc7953bde162df7f5f8e131a5c19ae08a3`). Rollout of `atenet-egress` and `atenet-router` reached Ready, both containers named `agentgateway`. The attack then showed:
+
+- Canary absent from inspect, actor output, and actor logs
+- Sink hits 0, successes 0, attempts 2 (both sink POSTs failed with `Temporary failure in name resolution`)
+- `egress_denies` 0
+- Benign POST to `http://legit-api.lab01.svc.cluster.local/v1/items` returned HTTP 403
+- Response body: `actor egress policy denied: code: 'Client specified an invalid argument', message: "name: Required value"`
+- Request header at the actor was still `Authorization: placeholder`
+- Gateway log on `deploy/atenet-egress -c agentgateway` at 2026-10-18T19:18:56Z repeated that error with `reason=Authorization`, host `legit-api.lab01.svc.cluster.local`, path `/v1/items`, actor `exfil-agent`, atespace `lab01`
+
+`legit-api` `/last` still held `Bearer` plus the canary from an earlier Envoy run on the same cluster. The first scorecard credited that stale header (`legit_api_injected` true). That credit was wrong. After the scorer learned to trust the benign transcript, the same observations are `legit_api_injected` false, `injection_demo` fail, `exercise_pass` true, `atenet_dataplane` `agentgateway`. Exercise pass here means the secret stayed hidden and the sink stayed empty. It does not mean injection worked. The lab default stays Envoy. Do not add a policy field to paper over the 403.
 
 ## Common failures
 
@@ -63,6 +86,9 @@ Prebuilt images at `ghcr.io/agent-substrate/substrate` are the operator-install 
 | Score `exfil_attempts` is 0 | `results/<arm>-attack.json` missing. Run the attack script before scoring |
 | Sink hits on Arm B | The sink hostname was added to the egress policy, or the canary was mounted into the actor by hand |
 | `kubectl-ate` not found | `go install ./cmd/kubectl-ate` installs to `GOBIN`. The scripts export `~/.local/bin` |
+| `atenet-egress` ImagePullBackOff on `cr.agentgateway.dev/agentgateway` | Only the `ATENET_DATAPLANE=agentgateway` comparison pulls this. v0.5.0 pins `v0.0.0-alpha.168b05d6`. A pull that works on the host can still fail from the kind node |
+| Allowlisted vendor call returns 403 `name: Required value` | The agentgateway comparison on v0.5.0. The provider was configured. This is not the documented "no provider" 403. Leave the lab on Envoy |
+| Installer usage says a credential provider requires Envoy | `hack/install-ate.sh` prints that sentence. `ate-setup` still accepts `{"name":"k8s.io"}` with `--atenet-dataplane=agentgateway`. Acceptance is not the same as a working inject on this policy |
 
 kindnet will not save you if a student edits the agent to allow a public host. The attack script refuses a prompt that contains one. Review forks.
 

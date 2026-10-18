@@ -42,9 +42,10 @@ const labs = await getLabs();
 						<code>draft</code> is not "coming soon".
 					</li>
 					<li>
-						Add <code>labs/NN-short-name/README.md</code>. Keep these level-2 headings, in order: Objectives,
-						Prerequisites, Setup, Attack, Defend, Measure, Cleanup. Extra sections are fine. The site renders this
-						file at <code>/labs/NN-short-name/</code>.
+						Add <code>labs/NN-short-name/README.md</code>. A single-page lab keeps these level-2 headings, in order:
+						Objectives, Prerequisites, Setup, Attack, Defend, Measure, Cleanup. A walkthrough lab keeps the README as
+						a short overview and adds <code>steps/01-name.md</code> with Next and Back links. The site renders the
+						overview at <code>/labs/NN-short-name/</code> and each step beside it. Lab 01 is the walkthrough.
 					</li>
 					<li>
 						Remove any placeholder at <code>site/src/content/labs/NN-short-name.md</code>. A placeholder is only for a
