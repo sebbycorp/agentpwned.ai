@@ -10,7 +10,7 @@ export function rewriteTutorialLinks(markdown: string, labId: string): string {
 }
 
 export function inlineBoards(markdown: string, diagramsDir: string): string {
-	return markdown.replace(/!\[([^\]]*)\]\(\.\.\/diagrams\/([a-z0-9.-]+\.svg)\)/g, (full, alt: string, file: string) => {
+	return markdown.replace(/!\[([^\]]*)\]\((?:\.\.\/)?diagrams\/([a-z0-9.-]+\.svg)\)/g, (full, alt: string, file: string) => {
 		const svgPath = join(diagramsDir, file);
 		if (!existsSync(svgPath)) return full;
 		const svg = readFileSync(svgPath, 'utf8')

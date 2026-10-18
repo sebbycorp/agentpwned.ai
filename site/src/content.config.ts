@@ -23,6 +23,10 @@ const steps = defineCollection({
 		summary: z.string().min(1),
 		lab: z.string().min(1),
 		order: z.number().int().positive(),
+		canary: z.string().min(1),
+		sink: z.string().min(1),
+		legit: z.string().min(1),
+		plane: z.string().min(1),
 	}),
 });
 

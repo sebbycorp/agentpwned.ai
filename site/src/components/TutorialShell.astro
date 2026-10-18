@@ -8,6 +8,13 @@ interface StepLink {
 	id: string;
 }
 
+interface StatusTone {
+	canary?: string;
+	sink?: string;
+	legit?: string;
+	plane?: string;
+}
+
 interface Props {
 	lab: LabEntry;
 	progress: string;
@@ -15,11 +22,20 @@ interface Props {
 	lede?: string;
 	steps: StepLink[];
 	currentId: string;
+	status?: StatusTone | null;
 	prev?: { href: string; title: string } | null;
 	next?: { href: string; title: string } | null;
 }
 
-const { lab, progress, heading, lede, steps, currentId, prev = null, next = null } = Astro.props;
+const { lab, progress, heading, lede, steps, currentId, status = null, prev = null, next = null } = Astro.props;
+
+function tone(value: string | undefined): string {
+	if (!value) return '';
+	const lower = value.toLowerCase();
+	if (lower.includes('200') || lower.includes('hidden') || lower.includes('blocked') || lower === 'envoy') return 'ok';
+	if (lower.includes('leak') || lower.includes('visible') || lower.includes('placeholder') || lower.includes('none')) return 'bad';
+	return '';
+}
 const number = labNumber(lab.data.order);
 const overviewHref = `/labs/${lab.id}/`;
 ---
@@ -71,6 +87,28 @@ const overviewHref = `/labs/${lab.id}/`;
 				</ol>
 			</nav>
 			<div class="lab-body">
+				{
+					status && (
+						<dl class="status" aria-label="Run status">
+							<div>
+								<dt>Canary</dt>
+								<dd class={tone(status.canary)}>{status.canary}</dd>
+							</div>
+							<div>
+								<dt>Sink</dt>
+								<dd class={tone(status.sink)}>{status.sink}</dd>
+							</div>
+							<div>
+								<dt>Legit call</dt>
+								<dd class={tone(status.legit)}>{status.legit}</dd>
+							</div>
+							<div>
+								<dt>Dataplane</dt>
+								<dd class={tone(status.plane)}>{status.plane}</dd>
+							</div>
+						</dl>
+					)
+				}
 				<slot />
 				<nav class="pager" aria-label="Step">
 					{

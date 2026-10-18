@@ -47,6 +47,11 @@ export function stepsLoader(): Loader {
 					if (!parsed.data.title || !parsed.data.summary) {
 						throw new Error(`${entry.name}/steps/${name} needs title and summary in frontmatter`);
 					}
+					for (const key of ['canary', 'sink', 'legit', 'plane']) {
+						if (!parsed.data[key]) {
+							throw new Error(`${entry.name}/steps/${name} needs ${key} in frontmatter`);
+						}
+					}
 					const stem = name.replace(/\.md$/, '');
 					const body = inlineBoards(rewriteTutorialLinks(parsed.body, labId), diagramsDir);
 					const id = `${labId}/${stem}`;
@@ -57,6 +62,10 @@ export function stepsLoader(): Loader {
 							summary: parsed.data.summary,
 							lab: labId,
 							order: Number(name.slice(0, 2)),
+							canary: parsed.data.canary,
+							sink: parsed.data.sink,
+							legit: parsed.data.legit,
+							plane: parsed.data.plane,
 						},
 					});
 					const rendered = await renderMarkdown(body, { fileURL: pathToFileURL(full) });
