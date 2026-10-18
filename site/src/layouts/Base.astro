@@ -1,0 +1,73 @@
+---
+import '@fontsource-variable/ibm-plex-sans/wght.css';
+import '@fontsource/ibm-plex-mono/latin-400.css';
+import '@fontsource/ibm-plex-mono/latin-500.css';
+import '../styles/global.css';
+
+interface Props {
+	title: string;
+	description: string;
+	current?: 'home' | 'labs' | 'lab' | 'template';
+}
+
+const { title, description, current = 'home' } = Astro.props;
+const pageTitle = title === 'agentpwned.ai' ? title : `${title} | agentpwned.ai`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const labsCurrent = current === 'labs' ? 'page' : undefined;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="description" content={description} />
+		<meta name="theme-color" content="#101410" />
+		<meta name="generator" content={Astro.generator} />
+		<link rel="canonical" href={canonical} />
+		<meta property="og:title" content={pageTitle} />
+		<meta property="og:description" content={description} />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={canonical} />
+		<title>{pageTitle}</title>
+	</head>
+	<body>
+		<a class="skip" href="#content">Skip to content</a>
+		<header class="site-header">
+			<div class="wrap bar">
+				<a class="wordmark" href="/">
+					<span class="caret" aria-hidden="true">&gt;_</span>
+					agentpwned.ai
+				</a>
+				<nav class="nav" aria-label="Primary">
+					<a href="/#why">Why</a>
+					<a href="/#loop">Loop</a>
+					<a href="/labs/" aria-current={labsCurrent}>Labs</a>
+				</nav>
+			</div>
+		</header>
+		<main id="content">
+			<slot />
+		</main>
+		<footer class="site-footer">
+			<div class="wrap foot">
+				<div>
+					<strong>agentpwned.ai</strong>
+					<p>
+						Educational labs for security engineers, platform engineers, and students. All lab attacks run only in
+						isolated, local lab environments.
+					</p>
+					<p>No tracking scripts on this site.</p>
+				</div>
+				<nav aria-label="Footer">
+					<a href="https://github.com/agent-substrate/substrate">Agent Substrate</a>
+					<a href="https://kagent.dev">kagent</a>
+					<a href="/labs/">Labs</a>
+					<a href="/labs/template/">Page template</a>
+					<a href="https://github.com/sebbycorp/agentpwned.ai">Source</a>
+				</nav>
+			</div>
+		</footer>
+	</body>
+</html>

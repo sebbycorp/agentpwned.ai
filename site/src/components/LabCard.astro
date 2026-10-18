@@ -1,0 +1,23 @@
+---
+import { badgeClass, labNumber, statusLabel, type LabEntry } from '../lib/labs';
+
+interface Props {
+	lab: LabEntry;
+	level?: 2 | 3;
+}
+
+const { lab, level = 3 } = Astro.props;
+const Title = level === 2 ? 'h2' : 'h3';
+const number = labNumber(lab.data.order);
+---
+
+<a class="card" href={`/labs/${lab.id}/`}>
+	<p class="kicker">
+		<span>Lab {number}</span>
+		<span class={badgeClass(lab.data.status)}>{statusLabel(lab.data.status)}</span>
+		{lab.data.duration && <span>{lab.data.duration}</span>}
+		{lab.data.difficulty && <span>{lab.data.difficulty}</span>}
+	</p>
+	<Title>{lab.data.title}</Title>
+	<p>{lab.data.summary}</p>
+</a>

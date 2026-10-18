@@ -1,0 +1,162 @@
+---
+import LabCard from '../components/LabCard.astro';
+import Base from '../layouts/Base.astro';
+import { getLabs } from '../lib/labs';
+
+const labs = await getLabs();
+---
+
+<Base
+	title="agentpwned.ai"
+	description="Agents get pwned when they run without a sandbox. Hands-on labs for security engineers, platform engineers, and students."
+	current="home"
+>
+	<section class="hero">
+		<div class="wrap hero-grid">
+			<div>
+				<p class="kicker">Educational lab</p>
+				<h1>agentpwned.ai</h1>
+				<p class="tagline">Agents get pwned when they run without a sandbox.</p>
+				<p class="lede">
+					A hands-on lab for security engineers, platform engineers, and students. Attack a bare agent, put the same
+					agent in a sandbox, and score the difference.
+				</p>
+				<div class="actions">
+					<a class="button" href="/labs/">Browse the labs</a>
+					<a class="button secondary" href="#why">Why sandboxes</a>
+				</div>
+				<p class="safety">All lab attacks run only in isolated, local lab environments.</p>
+			</div>
+			<div>
+				<div class="term">
+					<div class="term-bar">
+						<span class="dot"></span>
+						<span class="dot"></span>
+						<span class="dot"></span>
+						<span>local lab</span>
+					</div>
+					<div class="term-body">
+						<p class="cmd"><span class="ps1">lab@local</span> run bare</p>
+						<dl class="run">
+							<dt>canary</dt>
+							<dd class="bad">leaked</dd>
+							<dt>egress</dt>
+							<dd>open</dd>
+						</dl>
+						<p class="cmd"><span class="ps1">lab@local</span> run sandbox</p>
+						<dl class="run">
+							<dt>canary</dt>
+							<dd class="good">hidden</dd>
+							<dt>egress</dt>
+							<dd>allowlist</dd>
+							<dt>credential</dt>
+							<dd>injected outside</dd>
+						</dl>
+						<p class="cmd"><span class="ps1">lab@local</span> score</p>
+						<dl class="run">
+							<dt>status</dt>
+							<dd class="wait">Lab 01 scorecard</dd>
+						</dl>
+					</div>
+				</div>
+				<p class="caption">
+					A sketch of the loop. Lab 01 computes the score from the cluster. This card is not that scorecard.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="section" id="why">
+		<div class="wrap">
+			<h2>Why sandboxes</h2>
+			<p class="intro">
+				An agent that can call tools is a program with a prompt-shaped control panel. If that program holds a secret and
+				can open network connections, a crafted input can ask it to send the secret out. A sandbox is how you shrink
+				what that program can touch.
+			</p>
+			<ul class="grid-3">
+				<li class="panel">
+					<h3>Untrusted text can steer the agent</h3>
+					<p>
+						Prompt injection hides instructions in content the agent is supposed to read. The agent may then call tools
+						the operator did not intend. The labs use a canary value so you can see a leak without handling a real
+						credential.
+					</p>
+				</li>
+				<li class="panel">
+					<h3>A key in the process can leave</h3>
+					<p>
+						A bare agent often receives an API key in its environment, plus a network path to anywhere. If an injection
+						convinces it to read that key and post it, the key is gone. Lab 01 is built around that failure.
+					</p>
+				</li>
+				<li class="panel">
+					<h3>Move the secret and the network outside</h3>
+					<p>
+						Egress control limits which destinations an agent may reach. Credential injection attaches a secret to an
+						approved request from outside the agent process, so the process itself does not hold the key.
+						<a href="/labs/01-secret-exfiltration/">Lab 01</a> does this on a local kind cluster with
+						<a href="https://github.com/agent-substrate/substrate">Agent Substrate</a>. The actor does not hold the
+						key. The lab does not use a SandboxAgent CRD.
+					</p>
+				</li>
+			</ul>
+		</div>
+	</section>
+
+	<section class="section" id="loop">
+		<div class="wrap">
+			<h2>The lab loop</h2>
+			<p class="intro">
+				Each lab repeats the same three moves. You do the attack, you repeat it with a sandbox in place, and you
+				measure what changed.
+			</p>
+			<ol class="steps">
+				<li class="step">
+					<p class="step-no">01</p>
+					<h3>Attack a bare agent</h3>
+					<p>
+						Run the agent with the secret in reach and the network open. Use the lab prompt against that setup and
+						record what leaves.
+					</p>
+				</li>
+				<li class="step">
+					<p class="step-no">02</p>
+					<h3>Attack the same agent in a sandbox</h3>
+					<p>
+						Keep the task. In Lab 01 the sandboxed run is an Agent Substrate actor with no copy of the key, an egress
+						allowlist, and credential injection at the gateway.
+					</p>
+				</li>
+				<li class="step">
+					<p class="step-no">03</p>
+					<h3>Score the difference</h3>
+					<p>
+						Compare the two runs with the Lab 01 scorecard. It reads the cluster after the run. This site does not
+						publish a canned score.
+					</p>
+				</li>
+			</ol>
+		</div>
+	</section>
+
+	<section class="section" id="labs">
+		<div class="wrap">
+			<h2>Labs</h2>
+			<p class="intro">
+				Lab 01 is a draft you can run on a local kind cluster. Egress Allowlist and Blast Radius are still
+				placeholders. Nothing here is aimed at a system outside your local lab.
+			</p>
+			<ul class="lab-grid">
+				{
+					labs.map((lab) => (
+						<li>
+							<LabCard lab={lab} />
+						</li>
+					))
+				}
+			</ul>
+			<p class="more"><a href="/labs/">Open the labs index</a></p>
+		</div>
+	</section>
+</Base>
