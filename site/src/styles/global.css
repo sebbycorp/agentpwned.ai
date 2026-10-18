@@ -761,6 +761,54 @@ h1 {
 	text-align: right;
 }
 
+.pager-next.is-locked {
+	opacity: 0.35;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+
+.predict {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.6rem;
+	margin: 0.4rem 0 0;
+}
+
+.predict-label {
+	margin: 0;
+	font-family: var(--mono);
+	font-size: 0.78rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--muted);
+}
+
+.predict button {
+	font: inherit;
+	font-family: var(--mono);
+	background: #000;
+	color: var(--text);
+	border: 2px solid var(--line-strong);
+	border-radius: 8px;
+	padding: 0.4rem 0.9rem;
+	cursor: pointer;
+}
+
+.predict button[aria-pressed='true'] {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+.reveal {
+	margin: 1rem 0 0;
+	border: 1px solid var(--line);
+	border-radius: 10px;
+	padding: 0.7rem 0.9rem;
+	font-family: var(--mono);
+	font-size: 0.92rem;
+}
+
 .board {
 	margin: 1.1rem 0 1.4rem;
 	background: #000;

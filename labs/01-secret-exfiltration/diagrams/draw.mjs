@@ -35,8 +35,8 @@ export function box(x, y, w, h, stroke) {
 	return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="14" fill="#000000" stroke="${stroke}" stroke-width="2"/>`;
 }
 
-export function card(x, y, w, h, title, sub, stroke) {
-	const titleSize = sub ? 54 : 64;
+export function card(x, y, w, h, title, sub, stroke, titleSize) {
+	titleSize = titleSize || (sub ? 54 : 64);
 	const titleY = sub ? y + h / 2 - 6 : y + h / 2 + 18;
 	return [
 		box(x, y, w, h, stroke),

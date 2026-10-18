@@ -55,20 +55,49 @@ if (existsSync(lab01Path)) {
 
 const step1Path = join(dist, 'labs/01-secret-exfiltration/01-why-this-lab/index.html');
 const setupPath = join(dist, 'labs/01-secret-exfiltration/03-bring-up-arm-a/index.html');
-const defendPath = join(dist, 'labs/01-secret-exfiltration/06-defend-with-substrate/index.html');
-const lastPath = join(dist, 'labs/01-secret-exfiltration/08-cleanup-and-recap/index.html');
+const defendPath = join(dist, 'labs/01-secret-exfiltration/07-defend-with-substrate/index.html');
+const lastPath = join(dist, 'labs/01-secret-exfiltration/13-cleanup-and-recap/index.html');
+const predictPath = join(dist, 'labs/01-secret-exfiltration/04-predict-bare/index.html');
+const revealPath = join(dist, 'labs/01-secret-exfiltration/06-score-arm-a/index.html');
+const injectionPath = join(dist, 'labs/01-secret-exfiltration/08-how-injection-works/index.html');
+const attackPath = join(dist, 'labs/01-secret-exfiltration/05-attack-the-bare-agent/index.html');
+const challengePath = join(dist, 'labs/01-secret-exfiltration/12-challenge/index.html');
 for (const relativePath of [
 	'labs/01-secret-exfiltration/01-why-this-lab/index.html',
-	'labs/01-secret-exfiltration/08-cleanup-and-recap/index.html',
+	'labs/01-secret-exfiltration/13-cleanup-and-recap/index.html',
+	'labs/01-secret-exfiltration/04-predict-bare/index.html',
+	'labs/01-secret-exfiltration/08-how-injection-works/index.html',
+	'labs/01-secret-exfiltration/12-challenge/index.html',
 ]) {
 	if (!existsSync(join(dist, relativePath))) errors.push(`missing dist/${relativePath}`);
 }
 if (existsSync(step1Path)) {
 	const step1 = readFileSync(step1Path, 'utf8');
-	if (!step1.includes('Step 1 of 8')) errors.push('Lab 01 step 1 is missing the progress label');
+	if (!step1.includes('Step 1 of 13')) errors.push('Lab 01 step 1 is missing the progress label');
 	if (!step1.includes('>Back<') || !step1.includes('>Next<')) errors.push('Lab 01 step 1 is missing Back or Next');
 	if (!step1.includes('<svg')) errors.push('Lab 01 step 1 is missing the lightboard');
 	if (!step1.includes('fill="#000000"')) errors.push('Lab 01 lightboard is missing its black board');
+}
+if (existsSync(predictPath)) {
+	const predict = readFileSync(predictPath, 'utf8');
+	if (!predict.includes('data-predict="bare"')) errors.push('Lab 01 bare predict step is missing the choice');
+	if (!predict.includes('is-locked')) errors.push('Lab 01 bare predict step does not lock Next');
+}
+if (existsSync(revealPath)) {
+	const reveal = readFileSync(revealPath, 'utf8');
+	if (!reveal.includes('data-reveal="bare"') || !reveal.includes('data-answer="leaks"')) {
+		errors.push('Lab 01 Arm A score is missing the predict reveal');
+	}
+}
+if (existsSync(injectionPath) && !readFileSync(injectionPath, 'utf8').includes('replaceHeaders')) {
+	errors.push('Lab 01 injection step is missing replaceHeaders');
+}
+if (existsSync(attackPath)) {
+	const attack = readFileSync(attackPath, 'utf8');
+	if (!attack.includes('fill="#ff3b30"')) errors.push('Lab 01 leak board is missing the red leak');
+}
+if (existsSync(challengePath) && !readFileSync(challengePath, 'utf8').includes('challenge.sh')) {
+	errors.push('Lab 01 challenge step is missing challenge.sh');
 }
 if (existsSync(setupPath) && !readFileSync(setupPath, 'utf8').includes('arm-a-up.sh')) {
 	errors.push('Lab 01 setup step is missing arm-a-up.sh');

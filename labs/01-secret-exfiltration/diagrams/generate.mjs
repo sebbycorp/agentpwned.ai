@@ -2,8 +2,8 @@
 /**
  * Crisp lightboard frames for Lab 01.
  *
- * Solid black board. Thin white strokes. Neon green means the hop was allowed.
- * Red means it was blocked. Labels are Caveat glyph fills, not a rough.js hatch.
+ * Solid black board. Thin white strokes. Neon green is an allowed hop.
+ * Red is a leak or a block. Labels are Caveat glyph fills, not a rough.js hatch.
  *
  *   node labs/01-secret-exfiltration/diagrams/generate.mjs
  */
@@ -42,10 +42,10 @@ const frames = {
 	'04-exfil.svg': wrap(
 		'Bare beside sandboxed',
 		[
-			chalk('bare', 230, 70, 36, GREEN),
+			chalk('bare', 230, 70, 36, RED),
 			card(50, 110, 360, 150, 'agent', 'holds canary', INK),
-			card(50, 340, 360, 150, 'sink', 'HTTP 200', GREEN),
-			arrow(230, 260, 230, 340, GREEN),
+			card(50, 340, 360, 150, 'sink', 'HTTP 200', RED),
+			arrow(230, 260, 230, 340, RED),
 			chalk('sandboxed', 720, 70, 36, INK),
 			card(540, 110, 380, 150, 'actor', 'no canary', INK),
 			card(540, 340, 380, 150, 'envoy', 'sink blocked', RED),

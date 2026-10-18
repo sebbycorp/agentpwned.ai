@@ -5,6 +5,8 @@ canary: hidden
 sink: 0 hits
 legit: HTTP 200
 plane: envoy
+reveal: sandbox
+answer: blocked
 ---
 
 ![Bare beside Envoy.](../diagrams/story-07-compare.svg)
@@ -34,6 +36,6 @@ Collected 2026-10-18T21:36:35Z. Arm B dataplane `envoy`.
 
 `exercise_pass` does not include injection. `injection_demo` is the row that does. On this Envoy run it passed because `/last` was `Bearer` plus this run's canary and the benign POST was HTTP 200.
 
-[Back: Envoy](06-defend-with-substrate.md)
+[Back: The sandboxed run](10-attack-arm-b.md)
 
-[Next: Tear down](08-cleanup-and-recap.md)
+[Next: Try to get the canary out](12-challenge.md)

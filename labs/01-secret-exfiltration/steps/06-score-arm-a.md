@@ -5,6 +5,8 @@ canary: visible
 sink: 1 hit
 legit: placeholder
 plane: none
+reveal: bare
+answer: leaks
 ---
 
 ![Arm A still shows the leak.](../diagrams/story-05-score-a.svg)
@@ -28,6 +30,6 @@ Collected 2026-10-18T20:32:53Z from cluster `lab01-bare`.
 
 `injection_demo` passes on Arm A because the vendor saw the literal placeholder. That is the contrast Arm B changes.
 
-[Back: The leak](04-attack-the-bare-agent.md)
+[Back: The leak](05-attack-the-bare-agent.md)
 
-[Next: Envoy](06-defend-with-substrate.md)
+[Next: Envoy](07-defend-with-substrate.md)

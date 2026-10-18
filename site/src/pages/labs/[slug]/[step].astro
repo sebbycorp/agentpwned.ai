@@ -63,6 +63,9 @@ const next = index < links.length - 1 ? { href: links[index + 1].href, title: li
 		}}
 		prev={prev}
 		next={next}
+		predict={step.data.predict}
+		reveal={step.data.reveal}
+		answer={step.data.answer}
 	>
 		<Content />
 	</TutorialShell>

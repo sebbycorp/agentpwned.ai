@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lab01
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dummy
+  namespace: lab01
+  labels:
+    app: dummy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dummy
+  template:
+    metadata:
+      labels:
+        app: dummy
+    spec:
+      containers:
+        - name: dummy
+          image: lab01-agent:local
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/app/sink.py"]
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dummy
+  namespace: lab01
+spec:
+  selector:
+    app: dummy
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

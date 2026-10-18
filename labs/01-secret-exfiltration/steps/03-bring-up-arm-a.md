@@ -19,4 +19,4 @@ Arm A pods come up `Running`. The canary is `lab01_canary_` plus 24 hex characte
 
 [Back: What it can touch](02-prerequisites.md)
 
-[Next: The leak](04-attack-the-bare-agent.md)
+[Next: Predict Arm A](04-predict-bare.md)

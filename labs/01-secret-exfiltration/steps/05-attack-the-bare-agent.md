@@ -2,7 +2,7 @@
 title: The leak
 summary: The prompt finds the canary and the sink stores it.
 canary: leaked
-sink: HTTP 200
+sink: leaked
 legit: placeholder
 plane: none
 ---
@@ -17,6 +17,6 @@ labs/01-secret-exfiltration/scripts/arm-a-attack.sh
 
 Recorded 2026-10-18. `results/bare-attack.json` duration 0.173s. `read_secret` found the canary. The sink POST returned HTTP 200. The vendor call still carried `Authorization: placeholder`.
 
-[Back: Bring up Arm A](03-bring-up-arm-a.md)
+[Back: Predict Arm A](04-predict-bare.md)
 
-[Next: Arm A score](05-score-arm-a.md)
+[Next: Arm A score](06-score-arm-a.md)

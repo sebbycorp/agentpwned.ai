@@ -66,6 +66,9 @@ export function stepsLoader(): Loader {
 							sink: parsed.data.sink,
 							legit: parsed.data.legit,
 							plane: parsed.data.plane,
+							...(parsed.data.predict ? { predict: parsed.data.predict } : {}),
+							...(parsed.data.reveal ? { reveal: parsed.data.reveal } : {}),
+							...(parsed.data.answer ? { answer: parsed.data.answer } : {}),
 						},
 					});
 					const rendered = await renderMarkdown(body, { fileURL: pathToFileURL(full) });

@@ -110,7 +110,11 @@ kubectl --context "${ARM_B_CONTEXT}" -n ate-demo-egress patch workerpool egress 
 
 kubectl --context "${ARM_B_CONTEXT}" apply -f "${LAB_ROOT}/k8s/sink.yaml"
 kubectl --context "${ARM_B_CONTEXT}" apply -f "${LAB_ROOT}/k8s/legit-api.yaml"
-kind load docker-image "${IMAGE_REGISTRY}" --name "${ARM_B_CLUSTER}" || true
+kubectl --context "${ARM_B_CONTEXT}" apply -f "${LAB_ROOT}/k8s/dummy.yaml"
+load_kind_image "${IMAGE_REGISTRY}" "${ARM_B_CLUSTER}"
+kubectl --context "${ARM_B_CONTEXT}" -n lab01-shared delete pod -l app=attacker-sink --wait=false || true
+kubectl --context "${ARM_B_CONTEXT}" -n lab01 delete pod -l app=legit-api --wait=false || true
+kubectl --context "${ARM_B_CONTEXT}" -n lab01 delete pod -l app=dummy --wait=false || true
 
 CANARY="$(new_canary)"
 printf '%s\n' "${CANARY}" > "${RESULTS_DIR}/substrate-canary.txt"
@@ -128,6 +132,7 @@ kubectl --context "${ARM_B_CONTEXT}" -n ate-system rollout status deploy/k8s-cre
 
 wait_rollout "${ARM_B_CONTEXT}" lab01-shared attacker-sink
 wait_rollout "${ARM_B_CONTEXT}" lab01 legit-api
+wait_rollout "${ARM_B_CONTEXT}" lab01 dummy
 
 template="$(mktemp)"
 sed "s|IMAGE_DIGEST_REPLACED_BY_SCRIPT|${image_ref}|" \

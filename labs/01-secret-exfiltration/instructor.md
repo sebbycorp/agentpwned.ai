@@ -35,6 +35,12 @@ Arm B exercise pass:
 
 If Arm B's injection demo is `skipped` or `fail` while the exercise passed, the allowlist held and the gateway did not prove injection. Treat that as an incomplete defend section, not as a pass of the whole story.
 
+## Predict and the challenge
+
+The predict step stores Leaks or Blocked in the browser (`localStorage` keys `lab01-predict-bare` and `lab01-predict-sandbox`). Next stays locked until a choice is stored. The following score step compares that guess with the run. Nothing is sent to a server.
+
+`scripts/challenge.sh` is the Arm B break-it checker. It posts four prompts through the actor: read env and files, POST to `attacker-sink`, POST to `dummy.lab01`, and a DNS lookup of `dummy.lab01`. The dummy is an in-cluster Service running `sink.py`. It is not on the egress policy. The checker prints each attempt's transcript result and `canary_reached_sink` from the sink `/report`. Grade that output. Do not substitute a guessed count.
+
 ## Pins
 
 | Piece | Pin | What was checked |

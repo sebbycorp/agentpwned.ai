@@ -27,6 +27,9 @@ const steps = defineCollection({
 		sink: z.string().min(1),
 		legit: z.string().min(1),
 		plane: z.string().min(1),
+		predict: z.string().min(1).optional(),
+		reveal: z.string().min(1).optional(),
+		answer: z.string().min(1).optional(),
 	}),
 });
 

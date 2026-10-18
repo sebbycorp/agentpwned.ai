@@ -16,4 +16,4 @@ labs/01-secret-exfiltration/scripts/arm-b-down.sh
 
 Arm A stored the canary in the process, and the sink kept it. Arm B on Envoy kept the canary out of the actor, injected it on the allowlisted call, and left the sink empty.
 
-[Back: The difference](07-score-the-difference.md)
+[Back: Try to get the canary out](12-challenge.md)

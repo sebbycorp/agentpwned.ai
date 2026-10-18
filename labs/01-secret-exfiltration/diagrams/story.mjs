@@ -3,7 +3,7 @@
  * One Lab 01 diagram, a frame per step.
  *
  * Black board. Outline boxes. Caveat labels are filled glyphs.
- * Neon green is an allowed hop. Red is a blocked hop.
+ * Neon green is an allowed hop. Red is a leak or a block.
  * Arm B on these frames is Envoy.
  *
  *   node labs/01-secret-exfiltration/diagrams/story.mjs
@@ -15,6 +15,13 @@ import { writeFileSync } from 'node:fs';
 import { INK, GREEN, RED, chalk, box, card, arrow, wrap } from './draw.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
+
+function legend() {
+	return [
+		chalk('green allowed', 250, 518, 24, GREEN),
+		chalk('red leak or block', 700, 518, 24, RED),
+	].join('');
+}
 
 function agent() {
 	return card(170, 120, 620, 300, 'agent', 'a process with a socket', INK);
@@ -44,13 +51,34 @@ function hold() {
 	].join('');
 }
 
+function predictBare() {
+	return [
+		chalk('leaks or blocked', 480, 72, 40, INK),
+		card(50, 160, 320, 220, 'agent', 'holds canary', INK),
+		card(560, 180, 340, 180, 'sink', '?', INK),
+		arrow(370, 270, 560, 270, INK),
+	].join('');
+}
+
 function exfil(caption) {
 	return [
-		caption ? chalk(caption, 480, 64, 40, GREEN) : '',
+		caption ? chalk(caption, 480, 64, 40, RED) : '',
 		card(40, 150, 300, 240, 'agent', 'holds canary', INK),
-		card(560, 170, 360, 200, 'sink', 'HTTP 200', GREEN),
-		arrow(340, 270, 560, 270, GREEN),
-		chalk('leaked', 450, 250, 36, GREEN),
+		card(560, 170, 360, 200, 'sink', 'HTTP 200', RED),
+		arrow(340, 270, 560, 270, RED),
+		chalk('leaked', 450, 250, 36, RED),
+		legend(),
+	].join('');
+}
+
+function setup() {
+	return [
+		box(36, 120, 250, 160, INK),
+		chalk('canary', 161, 185, 40, INK),
+		chalk('outside', 161, 230, 24, INK),
+		card(360, 140, 250, 200, 'actor', 'no canary', INK),
+		card(670, 140, 250, 200, 'envoy', 'v0.5.0', INK),
+		arrow(610, 240, 670, 240, INK),
 	].join('');
 }
 
@@ -62,55 +90,113 @@ function envoy() {
 		card(36, 200, 280, 220, 'actor', 'no canary', INK),
 		card(360, 180, 230, 200, 'envoy', 'v0.5.0', INK),
 		card(640, 36, 284, 160, 'legit API', 'HTTP 200', GREEN),
-		card(640, 340, 284, 160, 'sink', 'blocked', RED),
-		arrow(316, 280, 360, 260, GREEN),
+		card(640, 340, 284, 150, 'sink', 'blocked', RED),
+		arrow(316, 280, 360, 260, INK),
 		arrow(590, 220, 640, 130, GREEN),
 		chalk('injected', 500, 150, 32, GREEN),
 		arrow(500, 380, 640, 400, RED),
 		chalk('blocked', 520, 360, 32, RED),
+		legend(),
+	].join('');
+}
+
+function injection() {
+	const style = `<style>@media (prefers-reduced-motion: reduce) { .hop { display: none; } }</style>`;
+	const hops = [
+		`<circle class="hop" r="7" fill="${GREEN}"><animateMotion dur="6s" repeatCount="indefinite" path="M140,155 L370,155 L190,268"/></circle>`,
+		`<circle class="hop" r="7" fill="${RED}"><animateMotion dur="6s" repeatCount="indefinite" path="M370,175 L760,268"/></circle>`,
+	].join('');
+	return [
+		style,
+		chalk('1', 70, 78, 28, INK),
+		card(36, 90, 210, 130, 'actor', 'placeholder', INK, 44),
+		chalk('2', 310, 78, 28, INK),
+		card(280, 90, 200, 130, 'envoy', 'intercepts', INK, 44),
+		chalk('3', 560, 78, 28, INK),
+		card(530, 90, 394, 130, 'allowlist', 'default deny', INK, 44),
+		arrow(246, 155, 280, 155, INK),
+		arrow(480, 155, 530, 155, INK),
+		chalk('4', 70, 252, 28, GREEN),
+		card(36, 268, 310, 150, 'legit API', 'HTTP 200', GREEN, 44),
+		chalk('replaceHeaders', 400, 252, 26, GREEN),
+		arrow(380, 220, 190, 268, GREEN),
+		chalk('5', 640, 252, 28, RED),
+		card(610, 268, 314, 150, 'other host', 'denied', RED, 44),
+		arrow(480, 210, 700, 268, RED),
+		hops,
+		legend(),
+	].join('');
+}
+
+function predictSandbox() {
+	return [
+		chalk('leaks or blocked', 480, 64, 40, INK),
+		card(40, 180, 240, 170, 'actor', 'no canary', INK),
+		card(340, 180, 240, 170, 'envoy', 'allowlist', INK, 44),
+		card(660, 100, 260, 140, 'legit', '?', INK),
+		card(660, 310, 260, 140, 'sink', '?', INK),
+		arrow(280, 265, 340, 265, INK),
+		arrow(580, 230, 660, 170, INK),
+		arrow(580, 300, 660, 360, INK),
+	].join('');
+}
+
+function challenge() {
+	return [
+		chalk('four tries', 480, 64, 40, INK),
+		card(36, 110, 210, 150, 'read', 'env file', INK),
+		card(262, 110, 210, 150, 'sink', 'POST', INK),
+		card(488, 110, 210, 150, 'dummy', 'unlisted', INK),
+		card(714, 110, 210, 150, 'dns', 'lookup', INK),
+		card(250, 320, 460, 150, 'sink', 'read the report', RED),
 	].join('');
 }
 
 function compare() {
 	const left = [
-		chalk('bare', 230, 48, 36, GREEN),
-		box(40, 80, 380, 150, INK),
-		chalk('agent', 230, 150, 48, INK),
-		chalk('holds canary', 230, 190, 24, INK),
-		box(40, 340, 380, 150, GREEN),
-		chalk('sink', 230, 410, 48, GREEN),
-		chalk('HTTP 200', 230, 452, 24, GREEN),
-		arrow(230, 230, 230, 340, GREEN),
-		chalk('leaked', 300, 290, 28, GREEN),
+		chalk('bare', 230, 48, 36, RED),
+		box(40, 80, 380, 140, INK),
+		chalk('agent', 230, 145, 44, INK),
+		chalk('holds canary', 230, 185, 24, INK),
+		box(40, 310, 380, 140, RED),
+		chalk('sink', 230, 375, 44, RED),
+		chalk('HTTP 200', 230, 415, 24, RED),
+		arrow(230, 220, 230, 310, RED),
+		chalk('leaked', 310, 275, 28, RED),
 	];
 	const right = [
 		chalk('envoy', 720, 48, 36, INK),
-		box(540, 80, 180, 120, INK),
-		chalk('actor', 630, 155, 36, INK),
-		box(760, 80, 160, 120, GREEN),
-		chalk('legit', 840, 140, 32, GREEN),
-		chalk('HTTP 200', 840, 172, 20, GREEN),
-		box(540, 280, 180, 140, INK),
-		chalk('envoy', 630, 365, 36, INK),
-		box(760, 360, 160, 130, RED),
-		chalk('sink', 840, 420, 32, RED),
-		chalk('blocked', 840, 452, 20, RED),
-		arrow(720, 140, 760, 140, GREEN),
-		arrow(630, 200, 630, 280, INK),
-		arrow(720, 360, 760, 400, RED),
+		box(540, 80, 180, 110, INK),
+		chalk('actor', 630, 148, 32, INK),
+		box(760, 80, 160, 110, GREEN),
+		chalk('legit', 840, 132, 28, GREEN),
+		chalk('HTTP 200', 840, 162, 18, GREEN),
+		box(540, 270, 180, 130, INK),
+		chalk('envoy', 630, 345, 32, INK),
+		box(760, 330, 160, 120, RED),
+		chalk('sink', 840, 385, 28, RED),
+		chalk('blocked', 840, 418, 20, RED),
+		arrow(720, 135, 760, 135, GREEN),
+		arrow(630, 190, 630, 270, INK),
+		arrow(720, 340, 760, 380, RED),
 	];
-	return [...left, ...right].join('');
+	return [...left, ...right, legend()].join('');
 }
 
 const frames = [
 	['story-01-agent.svg', 'Agent', agent()],
 	['story-02-tools.svg', 'Tools on the machine', tools()],
 	['story-03-hold.svg', 'Canary inside the agent', hold()],
+	['story-predict-bare.svg', 'Will the canary reach the sink?', predictBare()],
 	['story-04-exfil.svg', 'Canary reaches the sink', exfil('')],
 	['story-05-score-a.svg', 'Arm A score still shows the leak', exfil('1 hit')],
+	['story-06-setup.svg', 'Canary stays outside the actor', setup()],
 	['story-06-envoy.svg', 'Envoy injects the key and blocks the sink', envoy()],
+	['story-09-injection.svg', 'Placeholder, allowlist, replaceHeaders, or denied', injection()],
+	['story-predict-sandbox.svg', 'Will the canary reach the sink?', predictSandbox()],
+	['story-10-challenge.svg', 'Four tries, then read the sink report', challenge()],
 	['story-07-compare.svg', 'Bare beside Envoy', compare()],
-	['story-08-compare.svg', 'Same boards, then tear the clusters down', compare() + chalk('then both clusters go away', 480, 520, 28, INK)],
+	['story-08-compare.svg', 'Bare beside Envoy, then both clusters go away', compare()],
 ];
 
 for (const [file, title, body] of frames) {
