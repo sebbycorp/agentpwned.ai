@@ -51,7 +51,10 @@ function opsToD(ops) {
 }
 
 function stroke(drawable, color, width, delay) {
+	// Outline sets only. A roughjs fill (any truthy `fill`, even the string 'none')
+	// adds a hachure set that would hatch over the box and its lettering.
 	return drawable.sets
+		.filter((set) => set.type === 'path')
 		.map((set) => {
 			const d = opsToD(set.ops);
 			return `<path d="${d}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round" style="--d:${delay}s"/>`;
@@ -77,7 +80,6 @@ function box(x, y, w, h, seed, color) {
 		stroke: color,
 		strokeWidth: 2.4,
 		seed,
-		fill: 'none',
 	});
 	return stroke(drawable, color, 2.4, (seed % 20) * 0.06);
 }
@@ -96,7 +98,7 @@ function line(x1, y1, x2, y2, seed, color, width = 2.4) {
 function arrow(x1, y1, x2, y2, seed, color) {
 	const angle = Math.atan2(y2 - y1, x2 - x1);
 	const length = 18;
-	const spread = 2.55;
+	const spread = 0.55;
 	const parts = [line(x1, y1, x2, y2, seed, color, 2.6)];
 	parts.push(
 		line(
