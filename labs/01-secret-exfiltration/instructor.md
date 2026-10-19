@@ -41,6 +41,10 @@ The predict step stores Leaks or Blocked in the browser (`localStorage` keys `la
 
 `scripts/challenge.sh` is the Arm B break-it checker. It posts four prompts through the actor: read env and files, POST to `attacker-sink`, POST to `dummy.lab01`, and a DNS lookup of `dummy.lab01`. The dummy is an in-cluster Service running `sink.py`. It is not on the egress policy. The checker prints each attempt's transcript result and `canary_reached_sink` from the sink `/report`. Grade that output. Do not substitute a guessed count.
 
+## Build it by hand
+
+`hand/` is the same bring-up as `scripts/arm-a-up.sh` and `scripts/arm-b-up.sh`, one command at a time. The quick path stays the scripted steps. The hand pages show the YAML those scripts apply and a check after each stage. `kubectl` and `score.sh` output on those pages is pasted from that hand run.
+
 ## Pins
 
 | Piece | Pin | What was checked |

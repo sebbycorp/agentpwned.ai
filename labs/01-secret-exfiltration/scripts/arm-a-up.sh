@@ -19,7 +19,7 @@ fi
 ensure_cluster_services "${ARM_A_CONTEXT}"
 
 echo "Loading image into ${ARM_A_CLUSTER}"
-kind load docker-image "${IMAGE_LOCAL}" --name "${ARM_A_CLUSTER}"
+load_kind_image "${IMAGE_LOCAL}" "${ARM_A_CLUSTER}"
 
 kubectl --context "${ARM_A_CONTEXT}" apply -f "${LAB_ROOT}/k8s/sink.yaml"
 kubectl --context "${ARM_A_CONTEXT}" apply -f "${LAB_ROOT}/k8s/legit-api.yaml"

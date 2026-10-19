@@ -99,6 +99,18 @@ if (existsSync(attackPath)) {
 if (existsSync(challengePath) && !readFileSync(challengePath, 'utf8').includes('challenge.sh')) {
 	errors.push('Lab 01 challenge step is missing challenge.sh');
 }
+const handCluster = join(dist, 'labs/01-secret-exfiltration/02-arm-a-cluster/index.html');
+const handInstall = join(dist, 'labs/01-secret-exfiltration/07-substrate-install/index.html');
+const handActor = join(dist, 'labs/01-secret-exfiltration/09-arm-b-actor/index.html');
+if (existsSync(handCluster) && !readFileSync(handCluster, 'utf8').includes('kind-arm-a.yaml')) {
+	errors.push('Lab 01 hand track is missing the Arm A kind command');
+}
+if (existsSync(handInstall) && !readFileSync(handInstall, 'utf8').includes('hack/install-ate-kind.sh')) {
+	errors.push('Lab 01 hand track is missing hack/install-ate-kind.sh');
+}
+if (existsSync(handActor) && !readFileSync(handActor, 'utf8').includes('replaceHeaders')) {
+	errors.push('Lab 01 hand track is missing replaceHeaders');
+}
 if (existsSync(setupPath) && !readFileSync(setupPath, 'utf8').includes('arm-a-up.sh')) {
 	errors.push('Lab 01 setup step is missing arm-a-up.sh');
 }

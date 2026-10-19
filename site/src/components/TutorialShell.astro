@@ -21,6 +21,8 @@ interface Props {
 	heading: string;
 	lede?: string;
 	steps: StepLink[];
+	sideSteps?: StepLink[];
+	sideLabel?: string;
 	currentId: string;
 	status?: StatusTone | null;
 	prev?: { href: string; title: string } | null;
@@ -30,7 +32,22 @@ interface Props {
 	answer?: string;
 }
 
-const { lab, progress, heading, lede, steps, currentId, status = null, prev = null, next = null, predict, reveal, answer } = Astro.props;
+const {
+	lab,
+	progress,
+	heading,
+	lede,
+	steps,
+	sideSteps = [],
+	sideLabel = 'By hand',
+	currentId,
+	status = null,
+	prev = null,
+	next = null,
+	predict,
+	reveal,
+	answer,
+} = Astro.props;
 
 function tone(value: string | undefined): string {
 	if (!value) return '';
@@ -88,6 +105,23 @@ const overviewHref = `/labs/${lab.id}/`;
 						))
 					}
 				</ol>
+				{
+					sideSteps.length > 0 && (
+						<>
+							<p class="kicker">{sideLabel}</p>
+							<ol>
+								{sideSteps.map((step) => (
+									<li>
+										<a href={step.href} aria-current={step.id === currentId ? 'step' : undefined}>
+											<span class="step-index">{String(step.order).padStart(2, '0')}</span>
+											{step.title}
+										</a>
+									</li>
+								))}
+							</ol>
+						</>
+					)
+				}
 			</nav>
 			<div class="lab-body">
 				{

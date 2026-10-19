@@ -29,3 +29,19 @@ Start at [Step 1: The agent](steps/01-why-this-lab.md).
 13. [Tear down](steps/13-cleanup-and-recap.md)
 
 Instructor notes: [instructor.md](instructor.md).
+
+## Build it by hand
+
+The scripted steps are the quick path. This track runs the same commands one at a time.
+
+1. [Prerequisites](hand/01-prerequisites.md)
+2. [Arm A cluster](hand/02-arm-a-cluster.md)
+3. [Arm A workloads](hand/03-arm-a-workloads.md)
+4. [Arm A agent](hand/04-arm-a-agent.md)
+5. [Arm A score](hand/05-arm-a-score.md)
+6. [Substrate cluster](hand/06-substrate-kind.md)
+7. [Substrate install](hand/07-substrate-install.md)
+8. [Arm B services](hand/08-arm-b-services.md)
+9. [Arm B actor](hand/09-arm-b-actor.md)
+10. [Arm B score](hand/10-arm-b-score.md)
+11. [Tear down](hand/11-teardown.md)

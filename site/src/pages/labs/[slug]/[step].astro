@@ -30,16 +30,27 @@ export async function getStaticPaths() {
 	return paths;
 }
 
-const { step, lab, siblings, index } = Astro.props;
+const { step, lab, siblings } = Astro.props;
 const { Content } = await render(step);
-const total = siblings.length;
+const track = step.data.track ?? 'scripted';
+const inTrack = siblings
+	.filter((item) => (item.data.track ?? 'scripted') === track)
+	.sort((a, b) => a.data.order - b.data.order);
+const index = inTrack.findIndex((item) => item.id === step.id);
+const total = inTrack.length;
 const progress = `Step ${step.data.order} of ${total}`;
-const links = siblings.map((item) => ({
+const toLink = (item: (typeof siblings)[number]) => ({
 	href: `/labs/${lab.id}/${item.id.slice(lab.id.length + 1)}/`,
 	title: item.data.title,
 	order: item.data.order,
 	id: item.id,
-}));
+});
+const links = inTrack.map(toLink);
+const sideSteps = siblings
+	.filter((item) => (item.data.track ?? 'scripted') !== track)
+	.sort((a, b) => a.data.order - b.data.order)
+	.map(toLink);
+const sideLabel = track === 'hand' ? 'Quick path' : 'By hand';
 const prev =
 	index === 0
 		? { href: `/labs/${lab.id}/`, title: 'Overview' }
@@ -54,6 +65,8 @@ const next = index < links.length - 1 ? { href: links[index + 1].href, title: li
 		heading={step.data.title}
 		lede={step.data.summary}
 		steps={links}
+		sideSteps={sideSteps}
+		sideLabel={sideLabel}
 		currentId={step.id}
 		status={{
 			canary: step.data.canary,

@@ -17,6 +17,8 @@ labs/01-secret-exfiltration/scripts/arm-a-up.sh
 
 Arm A pods come up `Running`. The canary is `lab01_canary_` plus 24 hex characters, in env `CANARY_API_KEY` and `/secrets/api_key`.
 
+[Build Arm A by hand](../hand/02-arm-a-cluster.md)
+
 [Back: What it can touch](02-prerequisites.md)
 
 [Next: Predict Arm A](04-predict-bare.md)
