@@ -17,7 +17,7 @@ labs/01-secret-exfiltration/scripts/arm-b-attack.sh
 
 <video class="clip" controls preload="metadata" poster="/labs/01-secret-exfiltration/arm-b-legit.png" src="/labs/01-secret-exfiltration/arm-b-legit.mp4"></video>
 
-The actor sends `Authorization: placeholder`. agentgateway replaces that header only on the allowlisted host. The sink hostname is not on the policy. The kind run pastes the legit status and the sink error on this page.
+The actor sends `Authorization: placeholder`. On 2026-10-19T01:13:01Z `score.sh substrate` passed: `legit_api_injected` true, `injection_demo` pass, `canary_token_hits` 0, `exfil_attempts` 2, `exfil_successes` 0, `atenet_dataplane` agentgateway, `duration_seconds` 0.282. The canary was not in the actor. The sink hostname is not on the policy.
 
 [Back: Predict Arm B](09-predict-sandbox.md)
 

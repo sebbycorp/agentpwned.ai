@@ -113,7 +113,7 @@ This run, after the three rollouts. The describe block is an excerpt of the real
 
 ```text
 NAME               READY   UP-TO-DATE   AVAILABLE   AGE
-vulnerable-agent   1/1     1            1           1s
+vulnerable-agent   1/1     1            1           15s
 Name:                   vulnerable-agent
 Namespace:              lab01-bare
 Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable

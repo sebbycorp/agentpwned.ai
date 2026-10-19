@@ -76,11 +76,11 @@ kubectl --context kind-lab01-bare get nodes
 kubectl --context kind-lab01-bare -n kube-system get configmap kube-proxy -o jsonpath='{.data.config\.conf}' | awk '/^mode:/{print}'
 ```
 
-This machine already listed `lab01-bare`, so create was skipped. The proxy mode was already nftables, so the patch was skipped. `kind load` succeeded. The check printed:
+`kind load` succeeded. The proxy mode was already nftables, so the patch was skipped. The node check then printed NotReady at age 6s.
 
 ```text
-NAME                       STATUS   ROLES           AGE   VERSION
-lab01-bare-control-plane   Ready    control-plane   7m    v1.32.2
+NAME                       STATUS     ROLES           AGE   VERSION
+lab01-bare-control-plane   NotReady   control-plane   6s    v1.32.2
 mode: nftables
 ```
 

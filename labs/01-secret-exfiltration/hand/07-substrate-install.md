@@ -106,7 +106,14 @@ kubectl --context kind-kind -n ate-system get deploy atenet-egress
 kubectl --context kind-kind -n ate-demo-egress get workerpool egress
 ```
 
-The kind run pastes the egress Deployment and the worker pool here. The egress container image must be the digest above, and the container name is `agentgateway`.
+The background loop printed `removed atelet hostPort 21998`. The push line was `Actor image localhost:5001/lab01-agent@sha256:653feeb3dcf421ac381f9fb36d57001ababbcfd6d7c715a6a09850d83d107a75`. The image pin printed `pinned 2 agentgateway image lines`. The check printed:
+
+```text
+NAME            READY   UP-TO-DATE   AVAILABLE   AGE
+atenet-egress   1/1     1            1           36s
+NAME     DESIRED   REPLICAS   READY   SANDBOXCONFIG    RESOLVED   AGE
+egress   1         1          1       gvisor-default   True       29s
+```
 
 [Back: Substrate cluster](06-substrate-kind.md)
 

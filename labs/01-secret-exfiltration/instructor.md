@@ -43,7 +43,7 @@ The predict step stores Leaks or Blocked in the browser (`localStorage` keys `la
 
 ## Build it by hand
 
-`hand/` is the same bring-up as `scripts/arm-a-up.sh` and `scripts/arm-b-up.sh`, one command at a time. The quick path stays the scripted steps. Each hand page has a short what and why, field comments on the YAML, and a collapsed Why? for the longer note. `kubectl` and `score.sh` output on those pages is pasted from the agentgateway kind run. Substrate main at `3d3b929` is pre-1.0.
+`hand/` is the same bring-up as `scripts/arm-a-up.sh` and `scripts/arm-b-up.sh`, one command at a time. The quick path stays the scripted steps. Each hand page has a short what and why, field comments on the YAML, and a collapsed Why? for the longer note. `kubectl` and `score.sh` output on those pages is pasted from the hand run on 2026-10-19. Both arms passed. Arm B dataplane was `agentgateway`, image digest `sha256:fc64f1093a5f7fd32c9cc58d2b53f0a5d5781f7960e3a1ac0a59db4f6a39850f`. Substrate main at `3d3b929` is pre-1.0. The scripted run the same day also passed both arms on that image.
 
 ## Pins
 

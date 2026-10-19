@@ -12,7 +12,7 @@ plane: agentgateway
 <p class="because"><b>What this does.</b> Create the actor, then attach an egress policy that allows one HTTP host and replaces <code>Authorization</code> on that host. <b>Why it matters.</b> The actor has no Secret and sends <code>Authorization: placeholder</code>. On the allowed host, <code>replaceHeaders</code> swaps that placeholder for <code>Bearer</code> plus the Secret, and any other host is default-deny.</p>
 <details class="why">
 <summary>Why?</summary>
-<p>This rule is <code>http</code>, not <code>https</code>. On this pin, <code>docs/egress-credential-injection.md</code> says replacement runs when the deciding http or https rule has <code>replaceHeaders</code> and the request carries that header. If the header is missing, the request is forwarded unchanged and no credential is fetched. The URI is provider <code>k8s.io</code>, locator <code>default</code> (this cluster), namespace <code>lab01</code>, Secret <code>vendor-api-token</code>, key <code>token</code>. <code>docs/egress-traffic.md</code> on this commit says a name that is not on the policy is answered NXDOMAIN, and HTTP that reaches the gateway is 403. That doc is written toward a later release. This commit is pre-1.0. ActorTemplate on this pin has no <code>sandboxConfig</code>. The WorkerPool selects the sandbox class. Golden snapshots are disabled so the lab cold-boots. Suspend and resume are not what we score.</p>
+<p>This rule is <code>http</code>, not <code>https</code>. On this pin, <code>docs/egress-credential-injection.md</code> says replacement runs when the deciding http or https rule has <code>replaceHeaders</code> and the request carries that header. If the header is missing, the request is forwarded unchanged and no credential is fetched. The URI is provider <code>k8s.io</code>, locator <code>default</code> (this cluster), namespace <code>lab01</code>, Secret <code>vendor-api-token</code>, key <code>token</code>. <code>docs/egress-traffic.md</code> on this commit says a name that is not on the policy is answered NXDOMAIN, and HTTP that reaches the gateway is 403. The Python client printed <code>Errno -2</code>, <code>Name or service not known</code>. That doc is written toward a later release. This commit is pre-1.0. ActorTemplate on this pin has no <code>sandboxConfig</code>. The WorkerPool selects the sandbox class. This run created the actor suspended, and <code>resume</code> moved it to RUNNING. Golden snapshots stay disabled so the lab cold-boots.</p>
 </details>
 
 The template the script fills. `IMAGE_DIGEST_REPLACED_BY_SCRIPT` becomes the digest ref from the push. There is no canary env var and no Secret volume.
@@ -121,7 +121,14 @@ kubectl-ate --context kind-kind get actor exfil-agent -a lab01
 kubectl-ate --context kind-kind get egress-policy exfil-agent -a lab01
 ```
 
-The kind run pastes the actor and egress-policy checks here. State must be `ACTOR_STATE_RUNNING`.
+This run reached `ACTOR_STATE_RUNNING`. Pod name is from that run.
+
+```text
+ATESPACE   NAME          TEMPLATE            STATE                 WORKER POD                               WORKER IPS    VERSION   AGE
+lab01      exfil-agent   lab01/exfil-agent   ACTOR_STATE_RUNNING   ate-demo-egress/egress-c95f4b594-k8dnz   10.244.0.24   3         1s
+ATESPACE   ACTOR         RULES   VERSION   AGE
+lab01      exfil-agent   1       1         1s
+```
 
 [Back: Arm B services](08-arm-b-services.md)
 

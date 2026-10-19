@@ -235,17 +235,17 @@ On this kernel `kind load` printed `unknown containerd config version: 4`. The `
 
 ```text
 NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/attacker-sink   1/1     1            1           14s
-NAME                    TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
-service/attacker-sink   ClusterIP   10.96.28.2   <none>        80/TCP    14s
+deployment.apps/attacker-sink   1/1     1            1           4s
+NAME                    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/attacker-sink   ClusterIP   10.96.14.117   <none>        80/TCP    4s
 NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/dummy       1/1     1            1           13s
-deployment.apps/legit-api   1/1     1            1           13s
+deployment.apps/dummy       1/1     1            1           4s
+deployment.apps/legit-api   1/1     1            1           4s
 NAME                TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
-service/dummy       ClusterIP   10.96.51.225   <none>        80/TCP    13s
-service/legit-api   ClusterIP   10.96.136.66   <none>        80/TCP    13s
+service/dummy       ClusterIP   10.96.170.37   <none>        80/TCP    4s
+service/legit-api   ClusterIP   10.96.28.48    <none>        80/TCP    4s
 NAME               TYPE     DATA   AGE
-vendor-api-token   Opaque   1      11s
+vendor-api-token   Opaque   1      1s
 ```
 
 [Back: Substrate install](07-substrate-install.md)
