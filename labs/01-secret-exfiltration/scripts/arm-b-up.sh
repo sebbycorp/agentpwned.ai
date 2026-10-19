@@ -84,6 +84,8 @@ else
   echo "Atenet dataplane: envoy (Substrate v0.5.0 default)"
 fi
 
+relax_atelet_hostport "${ARM_B_CONTEXT}"
+
 (
   cd "${SUBSTRATE_SRC}"
   hack/install-ate-kind.sh \

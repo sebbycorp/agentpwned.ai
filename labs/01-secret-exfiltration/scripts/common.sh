@@ -79,6 +79,32 @@ _switch_kube_proxy_nftables() {
   kubectl --context "${context}" -n kube-system rollout status daemonset/kube-proxy --timeout=180s
 }
 
+# Kernels without the iptables multiport match cannot program hostPort DNAT.
+# Atelet is dialed on its pod IP (Substrate dialer.go), so this lab can drop
+# that hostPort. Poll while the installer applies the DaemonSet.
+relax_atelet_hostport() {
+  local context="$1"
+  local cluster="${context#kind-}"
+  local matches
+  matches="$(docker exec "${cluster}-control-plane" cat /proc/net/ip_tables_matches 2>/dev/null || true)"
+  if printf '%s\n' "${matches}" | grep -qx multiport; then
+    return 0
+  fi
+  echo "iptables multiport match is missing. Dropping atelet hostPort." >&2
+  (
+    local host_port
+    for _ in $(seq 1 400); do
+      host_port="$(kubectl --context "${context}" -n ate-system get ds atelet -o jsonpath='{.spec.template.spec.containers[0].ports[0].hostPort}' 2>/dev/null || true)"
+      if [[ -n "${host_port}" ]]; then
+        kubectl --context "${context}" -n ate-system patch ds atelet --type json \
+          -p '[{"op":"remove","path":"/spec/template/spec/containers/0/ports/0/hostPort"}]' >/dev/null
+        echo "removed atelet hostPort ${host_port}" >&2
+      fi
+      sleep 2
+    done
+  ) &
+}
+
 # kind load rejects some containerd config versions. Fall back to ctr import
 # and retag the image to the name the lab Deployments pull.
 load_kind_image() {
