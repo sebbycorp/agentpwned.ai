@@ -9,10 +9,10 @@ plane: none
 
 ![Env, a file, and a socket.](../diagrams/story-02-tools.svg)
 
-<p class="because"><b>What this does.</b> Confirm Docker, kind, kubectl, Python, git, and Go are on the path. Arm B stops if Go is older than 1.27. <b>Why it matters.</b> kind is a Kubernetes cluster that runs in Docker, so this lab does not need a cloud account. Substrate v0.5.0 is pre-1.0 and its <code>go.mod</code> says <code>go 1.27.0</code>.</p>
+<p class="because"><b>What this does.</b> Confirm Docker, kind, kubectl, Python, git, and Go are on the path. Arm B stops if Go is older than 1.27. <b>Why it matters.</b> kind is a Kubernetes cluster that runs in Docker, so this lab does not need a cloud account. This Substrate pin is pre-1.0 and its <code>go.mod</code> says <code>go 1.27.0</code>.</p>
 <details class="why">
 <summary>Why?</summary>
-<p>Docker builds the container images. kubectl is the client that applies YAML and reads status. Python runs the agent, the sink, and the scorer. git clones the Substrate tag when the checkout is missing. The version check is the same one <code>arm-b-up.sh</code> runs.</p>
+<p>Docker builds the container images. kubectl is the client that applies YAML and reads status. Python runs the agent, the sink, and the scorer. git fetches the pinned Substrate commit when the checkout is not already that commit. The version check is the same one <code>arm-b-up.sh</code> runs.</p>
 </details>
 
 Arm A checks these four.
@@ -34,7 +34,7 @@ python3 - "$(go env GOVERSION | sed 's/^go//')" <<'END'
 import sys
 parts = [int(p) for p in sys.argv[1].split(".")[:2]]
 if parts < [1, 27]:
-    sys.exit(f"Go {sys.argv[1]} is too old. Substrate v0.5.0 requires Go 1.27 or newer.")
+    sys.exit(f"Go {sys.argv[1]} is too old. This Substrate pin requires Go 1.27 or newer.")
 END
 ```
 

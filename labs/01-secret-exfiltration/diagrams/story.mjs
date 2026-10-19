@@ -4,7 +4,7 @@
  *
  * Black board. Outline boxes. Caveat labels are filled glyphs.
  * Neon green is an allowed hop. Red is a leak or a block.
- * Arm B on these frames is Envoy.
+ * Arm B on these frames is agentgateway.
  *
  *   node labs/01-secret-exfiltration/diagrams/story.mjs
  */
@@ -77,25 +77,25 @@ function setup() {
 		chalk('canary', 161, 185, 40, INK),
 		chalk('outside', 161, 230, 24, INK),
 		card(360, 140, 250, 200, 'actor', 'no canary', INK),
-		card(670, 140, 250, 200, 'envoy', 'v0.5.0', INK),
+		card(670, 140, 250, 200, 'agentgateway', '', INK, 28),
 		arrow(610, 240, 670, 240, INK),
 	].join('');
 }
 
-function envoy() {
+function gateway() {
 	return [
 		box(36, 40, 250, 110, INK),
 		chalk('canary', 161, 92, 40, INK),
 		chalk('outside', 161, 128, 24, INK),
-		card(36, 200, 280, 220, 'actor', 'no canary', INK),
-		card(360, 180, 230, 200, 'envoy', 'v0.5.0', INK),
+		card(36, 200, 250, 220, 'actor', 'no canary', INK),
+		card(310, 175, 280, 220, 'agentgateway', '', INK, 32),
 		card(640, 36, 284, 160, 'legit API', 'HTTP 200', GREEN),
 		card(640, 340, 284, 150, 'sink', 'blocked', RED),
-		arrow(316, 280, 360, 260, INK),
-		arrow(590, 220, 640, 130, GREEN),
-		chalk('injected', 500, 150, 32, GREEN),
-		arrow(500, 380, 640, 400, RED),
-		chalk('blocked', 520, 360, 32, RED),
+		arrow(286, 290, 310, 280, INK),
+		arrow(590, 230, 640, 130, GREEN),
+		chalk('injected', 560, 150, 28, GREEN),
+		arrow(480, 395, 640, 400, RED),
+		chalk('blocked', 540, 360, 28, RED),
 		legend(),
 	].join('');
 }
@@ -108,21 +108,21 @@ function injection() {
 	].join('');
 	return [
 		style,
-		chalk('1', 70, 78, 28, INK),
-		card(36, 90, 210, 130, 'actor', 'placeholder', INK, 44),
-		chalk('2', 310, 78, 28, INK),
-		card(280, 90, 200, 130, 'envoy', 'intercepts', INK, 44),
-		chalk('3', 560, 78, 28, INK),
-		card(530, 90, 394, 130, 'allowlist', 'default deny', INK, 44),
-		arrow(246, 155, 280, 155, INK),
-		arrow(480, 155, 530, 155, INK),
+		chalk('1', 50, 78, 28, INK),
+		card(24, 90, 200, 130, 'actor', 'placeholder', INK, 40),
+		chalk('2', 300, 78, 28, INK),
+		card(240, 90, 250, 130, 'agentgateway', 'intercepts', INK, 28),
+		chalk('3', 620, 78, 28, INK),
+		card(510, 90, 420, 130, 'allowlist', 'default deny', INK, 44),
+		arrow(224, 155, 240, 155, INK),
+		arrow(490, 155, 510, 155, INK),
 		chalk('4', 70, 252, 28, GREEN),
 		card(36, 268, 310, 150, 'legit API', 'HTTP 200', GREEN, 44),
 		chalk('replaceHeaders', 400, 252, 26, GREEN),
-		arrow(380, 220, 190, 268, GREEN),
+		arrow(365, 220, 190, 268, GREEN),
 		chalk('5', 640, 252, 28, RED),
 		card(610, 268, 314, 150, 'other host', 'denied', RED, 44),
-		arrow(480, 210, 700, 268, RED),
+		arrow(620, 220, 760, 268, RED),
 		hops,
 		legend(),
 	].join('');
@@ -132,10 +132,10 @@ function predictSandbox() {
 	return [
 		chalk('leaks or blocked', 480, 64, 40, INK),
 		card(40, 180, 240, 170, 'actor', 'no canary', INK),
-		card(340, 180, 240, 170, 'envoy', 'allowlist', INK, 44),
+		card(310, 180, 270, 170, 'agentgateway', 'allowlist', INK, 28),
 		card(660, 100, 260, 140, 'legit', '?', INK),
 		card(660, 310, 260, 140, 'sink', '?', INK),
-		arrow(280, 265, 340, 265, INK),
+		arrow(280, 265, 310, 265, INK),
 		arrow(580, 230, 660, 170, INK),
 		arrow(580, 300, 660, 360, INK),
 	].join('');
@@ -165,14 +165,14 @@ function compare() {
 		chalk('leaked', 310, 275, 28, RED),
 	];
 	const right = [
-		chalk('envoy', 720, 48, 36, INK),
+		chalk('agentgateway', 730, 48, 26, INK),
 		box(540, 80, 180, 110, INK),
 		chalk('actor', 630, 148, 32, INK),
 		box(760, 80, 160, 110, GREEN),
 		chalk('legit', 840, 132, 28, GREEN),
 		chalk('HTTP 200', 840, 162, 18, GREEN),
 		box(540, 270, 180, 130, INK),
-		chalk('envoy', 630, 345, 32, INK),
+		chalk('agentgateway', 630, 350, 22, INK),
 		box(760, 330, 160, 120, RED),
 		chalk('sink', 840, 385, 28, RED),
 		chalk('blocked', 840, 418, 20, RED),
@@ -191,12 +191,12 @@ const frames = [
 	['story-04-exfil.svg', 'Canary reaches the sink', exfil('')],
 	['story-05-score-a.svg', 'Arm A score still shows the leak', exfil('1 hit')],
 	['story-06-setup.svg', 'Canary stays outside the actor', setup()],
-	['story-06-envoy.svg', 'Envoy injects the key and blocks the sink', envoy()],
+	['story-06-gateway.svg', 'agentgateway injects the key and blocks the sink', gateway()],
 	['story-09-injection.svg', 'Placeholder, allowlist, replaceHeaders, or denied', injection()],
 	['story-predict-sandbox.svg', 'Will the canary reach the sink?', predictSandbox()],
 	['story-10-challenge.svg', 'Four tries, then read the sink report', challenge()],
-	['story-07-compare.svg', 'Bare beside Envoy', compare()],
-	['story-08-compare.svg', 'Bare beside Envoy, then both clusters go away', compare()],
+	['story-07-compare.svg', 'Bare beside agentgateway', compare()],
+	['story-08-compare.svg', 'Bare beside agentgateway, then both clusters go away', compare()],
 ];
 
 for (const [file, title, body] of frames) {

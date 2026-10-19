@@ -4,10 +4,10 @@ summary: Delete both kind clusters and the local registry the Substrate install 
 canary: gone
 sink: gone
 legit: gone
-plane: envoy
+plane: agentgateway
 ---
 
-![Bare beside Envoy, then both clusters go away.](../diagrams/story-08-compare.svg)
+![Bare beside agentgateway, then both clusters go away.](../diagrams/story-08-compare.svg)
 
 <p class="because"><b>What this does.</b> Delete the kind clusters <code>lab01-bare</code> and <code>kind</code>, and remove the local registry container. <b>Why it matters.</b> Those are the clusters this lab created. The registry is the one <code>create-kind-cluster.sh</code> started on port 5001. Deleting the cluster deletes the canary Secret with it.</p>
 <details class="why">

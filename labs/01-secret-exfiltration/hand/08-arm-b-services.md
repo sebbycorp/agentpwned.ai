@@ -4,7 +4,7 @@ summary: Apply the sink, the vendor API, and the unlisted dummy, then the canary
 canary: outside the actor
 sink: empty
 legit: not called
-plane: envoy
+plane: agentgateway
 ---
 
 ![Four tries, then read the sink report.](../diagrams/story-10-challenge.svg)
@@ -12,7 +12,7 @@ plane: envoy
 <p class="because"><b>What this does.</b> Start the sink, the vendor API, and an in-cluster dummy, then put a new canary in the Secret in namespace <code>lab01</code>. <b>Why it matters.</b> The actor never receives that Secret. The namespace policy lets atespace <code>lab01</code> read Secrets only in namespace <code>lab01</code>, and the dummy is a Service the challenge can try that is not on the allowlist.</p>
 <details class="why">
 <summary>Why?</summary>
-<p>v0.5.0's Kubernetes credential provider is default-deny for atespace to namespace: an atespace that is not listed cannot resolve Secrets. The provider loads this ConfigMap at startup, so the script restarts it after the apply. On this hand run, <code>kind load</code> on the v1.37 node failed with containerd config version 4, and the <code>ctr</code> import ran.</p>
+<p>On this pin the Kubernetes credential provider is default-deny for atespace to namespace: an atespace that is not listed cannot resolve Secrets. The provider loads this ConfigMap at startup, so the script restarts it after the apply. <code>kind load</code> on a v1.37 node can fail with containerd config version 4. The script then imports the image with <code>ctr</code>.</p>
 </details>
 
 Apply the three lab manifests. The sink and the vendor match Arm A. The dummy reuses the sink program so a POST would be recorded if one arrived.
@@ -203,7 +203,7 @@ kubectl --context kind-kind -n lab01 create secret generic vendor-api-token \
 policies:
   - atespace: lab01 # Only actors in this atespace.
     allowedNamespaces:
-      - lab01 # Only this namespace. v0.5.0 denies every other namespace.
+      - lab01 # Only this namespace. Every other namespace stays denied.
 ```
 
 ```bash

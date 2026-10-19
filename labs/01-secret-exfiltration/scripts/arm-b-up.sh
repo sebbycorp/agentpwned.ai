@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install Agent Substrate v0.5.0 with its kind scripts, then the lab actor.
+# Install Agent Substrate main at SUBSTRATE_REF with agentgateway, then the lab actor.
 #
 # This follows hack/create-kind-cluster.sh and hack/install-ate-kind.sh.
 # The install builds images from the Substrate checkout (Go 1.27 or newer)
@@ -21,7 +21,7 @@ python3 - "${go_major}" <<'PY'
 import sys
 parts = [int(p) for p in sys.argv[1].split(".")[:2]]
 if parts < [1, 27]:
-    sys.exit(f"Go {sys.argv[1]} is too old. Substrate v0.5.0 requires Go 1.27 or newer.")
+    sys.exit(f"Go {sys.argv[1]} is too old. This Substrate pin requires Go 1.27 or newer.")
 PY
 
 if kind get clusters 2>/dev/null | grep -qx "${ARM_A_CLUSTER}"; then
@@ -29,13 +29,7 @@ if kind get clusters 2>/dev/null | grep -qx "${ARM_A_CLUSTER}"; then
   kind delete cluster --name "${ARM_A_CLUSTER}" || true
 fi
 
-if [[ ! -d "${SUBSTRATE_SRC}/.git" ]]; then
-  echo "Cloning ${SUBSTRATE_REF} into ${SUBSTRATE_SRC}"
-  mkdir -p "$(dirname "${SUBSTRATE_SRC}")"
-  git clone --depth 1 --branch "${SUBSTRATE_REF}" https://github.com/agent-substrate/substrate.git "${SUBSTRATE_SRC}"
-fi
-
-echo "Substrate checkout: $(git -C "${SUBSTRATE_SRC}" rev-parse HEAD) (${SUBSTRATE_REF})"
+pin_substrate_checkout
 
 # create-kind-cluster.sh deletes any existing cluster of this name.
 (
@@ -62,35 +56,20 @@ echo "Actor image ${image_ref}"
 export KO_DOCKER_REPO="${KO_DOCKER_REPO:-localhost:5001}"
 export GOMAXPROCS="${GOMAXPROCS:-2}"
 
-# Substrate v0.5.0 defaults atenet.dataplane to envoy. hack/install-ate-kind.sh
-# forwards --atenet-dataplane to hack/install-ate.sh, and that flag switches
-# ingress and egress together. agentgateway (alpha image
-# v0.0.0-alpha.168b05d6) was installed on this lab: the allowlisted vendor
-# POST returned HTTP 403, "name: Required value", and the credential was not
-# injected. The lab default stays envoy. Set ATENET_DATAPLANE=agentgateway
-# only to reproduce that comparison. Substrate v0.5.0 is pre-1.0.
-DATAPLANE_ARGS=()
-if [[ -n "${ATENET_DATAPLANE:-}" ]]; then
-  case "${ATENET_DATAPLANE}" in
-    envoy|agentgateway) ;;
-    *)
-      echo "ATENET_DATAPLANE must be envoy or agentgateway (got ${ATENET_DATAPLANE})" >&2
-      exit 1
-      ;;
-  esac
-  DATAPLANE_ARGS=(--atenet-dataplane="${ATENET_DATAPLANE}")
-  echo "Atenet dataplane override: ${ATENET_DATAPLANE}"
-else
-  echo "Atenet dataplane: envoy (Substrate v0.5.0 default)"
-fi
+# Main still pins an alpha agentgateway that 403s. Replace both image lines
+# with the digest of revision 955d56f before the installer reads them.
+pin_agentgateway_image
+echo "Atenet dataplane: agentgateway (${AGENTGATEWAY_IMAGE})"
 
 relax_atelet_hostport "${ARM_B_CONTEXT}"
 
 (
   cd "${SUBSTRATE_SRC}"
+  # --atenet-dataplane selects ingress and egress together. This commit is
+  # pre-1.0. v0.5.0's default is envoy and is not a lab path.
   hack/install-ate-kind.sh \
     --deploy-ate-system \
-    "${DATAPLANE_ARGS[@]}" \
+    --atenet-dataplane=agentgateway \
     --credential-provider='{"name":"k8s.io"}' \
     --rollout-timeout=15m
   # The egress demo publishes the gVisor worker image and a WorkerPool

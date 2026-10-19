@@ -4,7 +4,7 @@ summary: Fill the actor image digest, create the actor, and apply the egress pol
 canary: outside the actor
 sink: not on policy
 legit: allowlisted
-plane: envoy
+plane: agentgateway
 ---
 
 ![Placeholder, allowlist, replaceHeaders, or denied.](../diagrams/story-09-injection.svg)
@@ -12,7 +12,7 @@ plane: envoy
 <p class="because"><b>What this does.</b> Create the actor, then attach an egress policy that allows one HTTP host and replaces <code>Authorization</code> on that host. <b>Why it matters.</b> The actor has no Secret and sends <code>Authorization: placeholder</code>. On the allowed host, <code>replaceHeaders</code> swaps that placeholder for <code>Bearer</code> plus the Secret, and any other host is default-deny.</p>
 <details class="why">
 <summary>Why?</summary>
-<p>This rule is <code>http</code>, not <code>https</code>. The v0.5.0 credential-injection doc says replacement runs when the deciding http or https rule has <code>replaceHeaders</code> and the request carries that header. If the header is missing, the request is forwarded unchanged and no credential is fetched. The URI is provider <code>k8s.io</code>, locator <code>default</code> (this cluster), namespace <code>lab01</code>, Secret <code>vendor-api-token</code>, key <code>token</code>. The v0.5.0 traffic doc says DNS for a name that is not on the policy is answered REFUSED, and HTTP that reaches the gateway is 403. In this lab the Python client printed a name-resolution error. Substrate v0.5.0 is pre-1.0. This run created the actor suspended, and <code>resume</code> moved it to RUNNING. Golden snapshots are disabled so the lab cold-boots. Suspend and resume are not what we score.</p>
+<p>This rule is <code>http</code>, not <code>https</code>. On this pin, <code>docs/egress-credential-injection.md</code> says replacement runs when the deciding http or https rule has <code>replaceHeaders</code> and the request carries that header. If the header is missing, the request is forwarded unchanged and no credential is fetched. The URI is provider <code>k8s.io</code>, locator <code>default</code> (this cluster), namespace <code>lab01</code>, Secret <code>vendor-api-token</code>, key <code>token</code>. <code>docs/egress-traffic.md</code> on this commit says a name that is not on the policy is answered NXDOMAIN, and HTTP that reaches the gateway is 403. That doc is written toward a later release. This commit is pre-1.0. ActorTemplate on this pin has no <code>sandboxConfig</code>. The WorkerPool selects the sandbox class. Golden snapshots are disabled so the lab cold-boots. Suspend and resume are not what we score.</p>
 </details>
 
 The template the script fills. `IMAGE_DIGEST_REPLACED_BY_SCRIPT` becomes the digest ref from the push. There is no canary env var and no Secret volume.
@@ -24,6 +24,8 @@ The template the script fills. `IMAGE_DIGEST_REPLACED_BY_SCRIPT` becomes the dig
 #
 # Golden snapshots are disabled on purpose: this lab cold-boots the agent.
 # Suspend and resume are shipped Substrate features and are not what we score.
+# This pin has no sandboxConfig on ActorTemplate. The WorkerPool selects
+# the sandbox class. workerSelector below picks the egress demo pool.
 metadata:
   atespace: lab01
   name: exfil-agent
@@ -51,9 +53,6 @@ resources:
       quantity: "500m"
     - name: memory
       quantity: 512Mi
-sandboxConfig:
-  sandboxClass: gvisor # Same sandbox class the egress WorkerPool uses. Pre-1.0.
-  configName: gvisor-default
 snapshotConfig:
   preferredFidelity: SNAPSHOT_FIDELITY_VOLUMES
   storageLocation: gs://ate-snapshots/lab01/
@@ -76,7 +75,7 @@ The egress policy. One HTTP host. `replaceHeaders` swaps `Authorization`. The si
 # Actor egress policy for `kubectl ate create egress-policy`.
 # Metadata is filled by kubectl-ate. One HTTP rule: the vendor API only.
 # The attacker sink is absent, so default-deny applies to it.
-# replaceHeaders is Substrate credential injection (v0.5.0). The actor sends
+# replaceHeaders is Substrate credential injection on this main pin. The actor sends
 # a placeholder. The gateway swaps in the Secret. The actor never holds it.
 rules:
   - http: # This lab is HTTP to an in-cluster Service, not HTTPS.
@@ -122,14 +121,7 @@ kubectl-ate --context kind-kind get actor exfil-agent -a lab01
 kubectl-ate --context kind-kind get egress-policy exfil-agent -a lab01
 ```
 
-This run reached `ACTOR_STATE_RUNNING` on the first poll. Pod name is from that run.
-
-```text
-ATESPACE   NAME          TEMPLATE            STATE                 WORKER POD                                WORKER IPS    VERSION   AGE
-lab01      exfil-agent   lab01/exfil-agent   ACTOR_STATE_RUNNING   ate-demo-egress/egress-565bbf5857-9p5x6   10.244.0.22   3         1s
-ATESPACE   ACTOR         RULES   VERSION   AGE
-lab01      exfil-agent   1       1         1s
-```
+The kind run pastes the actor and egress-policy checks here. State must be `ACTOR_STATE_RUNNING`.
 
 [Back: Arm B services](08-arm-b-services.md)
 

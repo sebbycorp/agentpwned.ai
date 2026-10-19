@@ -1,6 +1,6 @@
 ---
 title: Substrate cluster
-summary: Drop Arm A if it is up, clone Substrate v0.5.0, and create the kind cluster the installer expects.
+summary: Drop Arm A if it is up, check out the pinned Substrate commit, and create the kind cluster the installer expects.
 canary: outside the actor
 sink: empty
 legit: not called
@@ -9,10 +9,10 @@ plane: none
 
 ![Canary stays outside the actor.](../diagrams/story-06-setup.svg)
 
-<p class="because"><b>What this does.</b> Delete Arm A, then run Substrate's kind script with no extra flags. <b>Why it matters.</b> That script creates the cluster named <code>kind</code> and a registry on <code>127.0.0.1:5001</code>, which is where Arm B pushes images. Substrate v0.5.0 is pre-1.0, and this lab pins tag v0.5.0, commit <code>e8d40c33</code>.</p>
+<p class="because"><b>What this does.</b> Delete Arm A, check out Substrate commit <code>3d3b929</code>, then run Substrate's kind script with no extra flags. <b>Why it matters.</b> That script creates the cluster named <code>kind</code> and a registry on <code>127.0.0.1:5001</code>, which is where Arm B pushes images. This commit is unreleased main and is pre-1.0.</p>
 <details class="why">
 <summary>Why?</summary>
-<p><code>arm-b-up.sh</code> deletes <code>lab01-bare</code> first so one machine is not running both clusters. The clone is skipped when <code>~/.cache/agentpwned/substrate</code> already has a <code>.git</code> directory. Substrate's kind config uses kube-proxy iptables mode. The same nftables branch as Arm A switches it when the statistic match is missing. That switch is a kernel workaround, not a Substrate feature.</p>
+<p><code>arm-b-up.sh</code> deletes <code>lab01-bare</code> first so one machine is not running both clusters. A tag clone cannot select this commit, so the fetch uses the full SHA. The checkout is refused if <code>HEAD</code> is not <code>3d3b92921bd68931c509e1b5bd57df00e76ffff0</code>. Substrate's kind config uses kube-proxy iptables mode. The same nftables branch as Arm A switches it when the statistic match is missing. That switch is a kernel workaround, not a Substrate feature.</p>
 </details>
 
 `arm-b-up.sh` deletes `lab01-bare` so this machine has room for Substrate.
@@ -23,16 +23,24 @@ if kind get clusters 2>/dev/null | grep -qx lab01-bare; then
 fi
 ```
 
-Clone v0.5.0 when the checkout has no `.git` directory. The default path is `$HOME/.cache/agentpwned/substrate`.
+Fetch the pinned commit. The default path is `$HOME/.cache/agentpwned/substrate`. `--branch` cannot select a raw SHA.
 
 ```bash
-export SUBSTRATE_REF="${SUBSTRATE_REF:-v0.5.0}"
+export SUBSTRATE_REF="${SUBSTRATE_REF:-3d3b92921bd68931c509e1b5bd57df00e76ffff0}"
 export SUBSTRATE_SRC="${SUBSTRATE_SRC:-${HOME}/.cache/agentpwned/substrate}"
-if [[ ! -d "${SUBSTRATE_SRC}/.git" ]]; then
-  mkdir -p "$(dirname "${SUBSTRATE_SRC}")"
-  git clone --depth 1 --branch "${SUBSTRATE_REF}" https://github.com/agent-substrate/substrate.git "${SUBSTRATE_SRC}"
+mkdir -p "$(dirname "${SUBSTRATE_SRC}")"
+if [[ ! -e "${SUBSTRATE_SRC}/.git" ]]; then
+  mkdir -p "${SUBSTRATE_SRC}"
+  git -C "${SUBSTRATE_SRC}" init
+  git -C "${SUBSTRATE_SRC}" remote add origin https://github.com/agent-substrate/substrate.git
+fi
+head="$(git -C "${SUBSTRATE_SRC}" rev-parse HEAD 2>/dev/null || true)"
+if [[ "${head}" != "${SUBSTRATE_REF}" ]]; then
+  git -C "${SUBSTRATE_SRC}" fetch --depth 1 origin "${SUBSTRATE_REF}"
+  git -C "${SUBSTRATE_SRC}" checkout --detach FETCH_HEAD
 fi
 git -C "${SUBSTRATE_SRC}" rev-parse HEAD
+test "$(git -C "${SUBSTRATE_SRC}" rev-parse HEAD)" = "${SUBSTRATE_REF}"
 ```
 
 Create the kind cluster and the local registry. The script runs this with no extra flags. It deletes an existing cluster named `kind`.
@@ -66,13 +74,7 @@ kubectl --context kind-kind get nodes
 docker inspect -f '{{.State.Running}}' kind-registry
 ```
 
-Checkout on this run: `e8d40c33f96f4b7a4984bfea7334a36ab5b45b7b`. The nftables branch saw `kube-proxy mode: iptables`, patched the ConfigMap, and rolled kube-proxy. The node check then printed NotReady at age 11s. The registry container was running. The node was Ready before the install rollouts on the next page.
-
-```text
-NAME                 STATUS     ROLES           AGE   VERSION
-kind-control-plane   NotReady   control-plane   11s   v1.37.0
-true
-```
+`rev-parse` must print `3d3b92921bd68931c509e1b5bd57df00e76ffff0`. The kind run pastes the node check here.
 
 [Back: Arm A score](05-arm-a-score.md)
 

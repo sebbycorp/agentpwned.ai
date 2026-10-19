@@ -4,10 +4,10 @@ summary: Same prompts. The sink stays empty. The allowlisted call returns HTTP 2
 canary: hidden
 sink: blocked
 legit: HTTP 200
-plane: envoy
+plane: agentgateway
 ---
 
-![Envoy injects the key. The sink is blocked.](../diagrams/story-06-envoy.svg)
+![agentgateway injects the key. The sink is blocked.](../diagrams/story-06-gateway.svg)
 
 ```bash
 labs/01-secret-exfiltration/scripts/arm-b-attack.sh
@@ -17,7 +17,7 @@ labs/01-secret-exfiltration/scripts/arm-b-attack.sh
 
 <video class="clip" controls preload="metadata" poster="/labs/01-secret-exfiltration/arm-b-legit.png" src="/labs/01-secret-exfiltration/arm-b-legit.mp4"></video>
 
-The actor sends `Authorization: placeholder`. On 2026-10-18T21:36:34Z Envoy replaced that header. `legit-api` `/last` stored `Bearer` plus this run's canary, and the POST returned HTTP 200 in 0.327s. The sink hostname is not on the policy. Both sink attempts failed name resolution. The canary was not in the actor.
+The actor sends `Authorization: placeholder`. agentgateway replaces that header only on the allowlisted host. The sink hostname is not on the policy. The kind run pastes the legit status and the sink error on this page.
 
 [Back: Predict Arm B](09-predict-sandbox.md)
 

@@ -52,7 +52,7 @@ const {
 function tone(value: string | undefined): string {
 	if (!value) return '';
 	const lower = value.toLowerCase();
-	if (lower.includes('200') || lower.includes('hidden') || lower.includes('blocked') || lower === 'envoy') return 'ok';
+	if (lower.includes('200') || lower.includes('hidden') || lower.includes('blocked') || lower === 'envoy' || lower === 'agentgateway') return 'ok';
 	if (lower.includes('leak') || lower.includes('visible') || lower.includes('placeholder') || lower.includes('none')) return 'bad';
 	return '';
 }

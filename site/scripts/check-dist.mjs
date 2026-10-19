@@ -112,8 +112,17 @@ if (existsSync(handPrereq) && !readFileSync(handPrereq, 'utf8').includes('What t
 if (existsSync(handActor) && !readFileSync(handActor, 'utf8').includes('class="why"')) {
 	errors.push('Lab 01 hand track is missing the Why block');
 }
-if (existsSync(handInstall) && !readFileSync(handInstall, 'utf8').includes('hack/install-ate-kind.sh')) {
-	errors.push('Lab 01 hand track is missing hack/install-ate-kind.sh');
+if (existsSync(handInstall)) {
+	const install = readFileSync(handInstall, 'utf8');
+	if (!install.includes('hack/install-ate-kind.sh')) {
+		errors.push('Lab 01 hand track is missing hack/install-ate-kind.sh');
+	}
+	if (!install.includes('--atenet-dataplane=agentgateway')) {
+		errors.push('Lab 01 hand track is missing --atenet-dataplane=agentgateway');
+	}
+	if (!install.includes('sha256:fc64f1093a5f7fd32c9cc58d2b53f0a5d5781f7960e3a1ac0a59db4f6a39850f')) {
+		errors.push('Lab 01 hand track is missing the agentgateway image digest');
+	}
 }
 if (existsSync(handActor) && !readFileSync(handActor, 'utf8').includes('replaceHeaders')) {
 	errors.push('Lab 01 hand track is missing replaceHeaders');

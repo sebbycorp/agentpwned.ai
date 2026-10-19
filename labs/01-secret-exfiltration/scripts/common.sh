@@ -12,8 +12,15 @@ ARM_A_CLUSTER="lab01-bare"
 ARM_A_CONTEXT="kind-${ARM_A_CLUSTER}"
 ARM_B_CLUSTER="${KIND_CLUSTER_NAME:-kind}"
 ARM_B_CONTEXT="kind-${ARM_B_CLUSTER}"
-SUBSTRATE_REF="${SUBSTRATE_REF:-v0.5.0}"
+# Unreleased Substrate main. Pre-1.0. v0.5.0 plus its pinned agentgateway
+# image returns HTTP 403 "name: Required value": GetActorEgressPolicy is
+# called without name=default, and v0.5.0 does not issue the worker-for-actor
+# certificate that agentgateway PR 3990 requires.
+SUBSTRATE_REF="${SUBSTRATE_REF:-3d3b92921bd68931c509e1b5bd57df00e76ffff0}"
 SUBSTRATE_SRC="${SUBSTRATE_SRC:-${HOME}/.cache/agentpwned/substrate}"
+# agentgateway git revision 955d56fae09b45f3cb8e85e797dbb1eb06134f77, which
+# includes PR 3990. Pinned by digest. Do not use the floating latest-dev tag.
+AGENTGATEWAY_IMAGE="${AGENTGATEWAY_IMAGE:-cr.agentgateway.dev/agentgateway@sha256:fc64f1093a5f7fd32c9cc58d2b53f0a5d5781f7960e3a1ac0a59db4f6a39850f}"
 
 export PATH="/usr/local/go/bin:${HOME}/.local/bin:${PATH}"
 
@@ -117,6 +124,64 @@ load_kind_image() {
   docker save "${image}" | docker exec -i "${cluster}-control-plane" ctr -n k8s.io images import -
   docker exec "${cluster}-control-plane" ctr -n k8s.io images tag \
     "${image}" "docker.io/library/${IMAGE_LOCAL}"
+}
+
+# Fetch the pinned commit. A tag clone cannot select a raw SHA, and a checkout
+# that is not this commit is not the lab.
+pin_substrate_checkout() {
+  local head=""
+  mkdir -p "$(dirname "${SUBSTRATE_SRC}")"
+  if [[ ! -e "${SUBSTRATE_SRC}/.git" ]]; then
+    if [[ -e "${SUBSTRATE_SRC}" ]] && [[ -n "$(ls -A "${SUBSTRATE_SRC}" 2>/dev/null || true)" ]]; then
+      echo "${SUBSTRATE_SRC} exists and is not a git checkout" >&2
+      exit 1
+    fi
+    mkdir -p "${SUBSTRATE_SRC}"
+    git -C "${SUBSTRATE_SRC}" init
+    git -C "${SUBSTRATE_SRC}" remote add origin https://github.com/agent-substrate/substrate.git
+  fi
+  if ! git -C "${SUBSTRATE_SRC}" remote get-url origin >/dev/null 2>&1; then
+    git -C "${SUBSTRATE_SRC}" remote add origin https://github.com/agent-substrate/substrate.git
+  fi
+  head="$(git -C "${SUBSTRATE_SRC}" rev-parse HEAD 2>/dev/null || true)"
+  if [[ "${head}" != "${SUBSTRATE_REF}" ]]; then
+    echo "Fetching Substrate ${SUBSTRATE_REF}"
+    git -C "${SUBSTRATE_SRC}" fetch --depth 1 origin "${SUBSTRATE_REF}"
+    git -C "${SUBSTRATE_SRC}" checkout --detach FETCH_HEAD
+  fi
+  head="$(git -C "${SUBSTRATE_SRC}" rev-parse HEAD)"
+  if [[ "${head}" != "${SUBSTRATE_REF}" ]]; then
+    echo "Substrate checkout ${head} is not ${SUBSTRATE_REF}" >&2
+    exit 1
+  fi
+  echo "Substrate checkout: ${head}"
+}
+
+# Substrate main at this commit still pins an older agentgateway alpha image.
+# Rewrite both kustomize image lines to the digest above before install.
+pin_agentgateway_image() {
+  local file="${SUBSTRATE_SRC}/manifests/ate-install/components/agentgateway/kustomization.yaml"
+  python3 - "${file}" "${AGENTGATEWAY_IMAGE}" <<'PY'
+import pathlib, sys
+path, image = sys.argv[1:]
+file = pathlib.Path(path)
+lines = file.read_text().splitlines(keepends=True)
+count = 0
+out = []
+for line in lines:
+    stripped = line.lstrip()
+    if stripped.startswith("image: cr.agentgateway.dev/agentgateway"):
+        indent = line[: len(line) - len(stripped)]
+        newline = "\n" if line.endswith("\n") else ""
+        out.append(f"{indent}image: {image}{newline}")
+        count += 1
+    else:
+        out.append(line)
+if count != 2:
+    sys.exit(f"expected 2 agentgateway image lines in {path}, found {count}")
+file.write_text("".join(out))
+print(f"pinned {count} agentgateway image lines")
+PY
 }
 
 # Refuse to post the lab prompt if it has been edited to name a non-cluster host.

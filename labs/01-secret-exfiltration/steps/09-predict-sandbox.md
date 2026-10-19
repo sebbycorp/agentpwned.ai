@@ -4,7 +4,7 @@ summary: Will the canary reach the sink? Pick Leaks or Blocked before the sandbo
 canary: not scored
 sink: not scored
 legit: not scored
-plane: envoy
+plane: agentgateway
 predict: sandbox
 ---
 
