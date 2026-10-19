@@ -1,0 +1,81 @@
+# Bare agent. The vendor canary is mounted into the process. The standing
+# memory file is a PVC, so a pod restart keeps it. kindnet does not enforce
+# NetworkPolicy, so this pod can dial the in-cluster attacker server.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lab02-bare
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: agent-memory
+  namespace: lab02-bare
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bare-agent
+  namespace: lab02-bare
+  labels:
+    app: bare-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bare-agent
+  template:
+    metadata:
+      labels:
+        app: bare-agent
+    spec:
+      containers:
+        - name: agent
+          image: lab02-agent:local
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/app/agent.py"]
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: PORT
+              value: "80"
+            - name: LAB_LLM
+              value: mock
+            - name: LAB_AGENT
+              value: bare
+            - name: MEMORY_PATH
+              value: /memory/standing.json
+            - name: LAB_TICKET_URL
+              value: http://ticket-server.lab02-shared.svc.cluster.local
+            - name: CANARY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vendor-api-token
+                  key: token
+          volumeMounts:
+            - name: canary
+              mountPath: /secrets
+              readOnly: true
+            - name: memory
+              mountPath: /memory
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+      volumes:
+        - name: canary
+          secret:
+            secretName: vendor-api-token
+            items:
+              - key: token
+                path: api_key
+        - name: memory
+          persistentVolumeClaim:
+            claimName: agent-memory

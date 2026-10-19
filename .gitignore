@@ -1,3 +1,4 @@
 labs/01-secret-exfiltration/results/
+labs/02-sleeper-memory/results/
 __pycache__/
 *.pyc

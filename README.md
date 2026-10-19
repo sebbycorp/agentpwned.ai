@@ -8,7 +8,11 @@ Everything here runs on a local kind cluster, with canary secrets only. See [SEC
 
 - [Lab 01: Secret Exfiltration](labs/01-secret-exfiltration/README.md). Status comes from [lab.md](labs/01-secret-exfiltration/lab.md) and is `draft`. The student pages are the step files under `labs/01-secret-exfiltration/steps/`. Bare agent gives the agent a canary key. Sandboxed agent runs the same agent as an [Agent Substrate](https://github.com/agent-substrate/substrate) actor: the actor does not hold the key, an egress allowlist blocks the attacker server, and the gateway injects the key only toward the allowlisted vendor API. The egress dataplane is agentgateway. The lab does not use a `SandboxAgent` CRD.
 
-The site renders Lab 01 from those files. Later labs can stay as placeholders in the site until a `labs/` folder exists.
+The site renders Lab 01 from those files.
+
+- [Lab 02: Sleeper Memory](labs/02-sleeper-memory/README.md). Status comes from [lab.md](labs/02-sleeper-memory/lab.md) and is `draft`. A ticket plants a standing callback in the agent's memory. The bare agent keeps it on a PVC and, after a restart, POSTs the session canary to the attacker server. The sandboxed agent is the same agent on Substrate: the poison survives suspend and resume, agentgateway blocks the callback, and a known-good tag restores the actor. The pins match Lab 01.
+
+Later labs can stay as placeholders in the site until a `labs/` folder exists.
 
 ## Layout
 
