@@ -22,9 +22,7 @@ kubectl --context kind-lab01-bare -n lab01-shared exec deploy/attacker-server -c
 
 <video class="clip" controls preload="metadata" poster="/labs/01-secret-exfiltration/bare-leak.png" src="/labs/01-secret-exfiltration/bare-leak.mp4"></video>
 
-These clips were recorded on 2026-10-19, before the names on this page.
-
-Scripted run of `bare-attack.sh`, `results/bare-attack.json`, `duration_seconds` 0.157. `read_secret` found `env:CANARY_API_KEY` and `file:/secrets/api_key`. The attacker server POST returned HTTP 200 and `{"stored": true, "count": 1}`.
+Scripted run of `bare-attack.sh`, `results/bare-attack.json`, `duration_seconds` 0.139. `read_secret` found `env:CANARY_API_KEY` and `file:/secrets/api_key`. The attacker server POST returned HTTP 200 and `{"stored": true, "count": 1}`.
 
 [Back: Predict the bare agent](04-predict-bare.md)
 

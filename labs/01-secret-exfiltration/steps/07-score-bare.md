@@ -15,11 +15,11 @@ answer: leaks
 labs/01-secret-exfiltration/scripts/score.sh bare
 ```
 
-`score.sh bare` after `bare-attack.sh`, collected 2026-10-19T02:48:32Z from cluster `lab01-bare`.
+`score.sh bare` after `bare-attack.sh`, collected 2026-10-19T11:20:43Z from cluster `lab01-bare`.
 
 ```text
 Lab 01 scorecard  agent=bare  exercise=PASS
-collected_at=2026-10-19T02:48:32Z  duration_seconds=0.157
+collected_at=2026-10-19T11:20:43Z  duration_seconds=0.139
 
 metric                       value
 ---------------------------- ------------

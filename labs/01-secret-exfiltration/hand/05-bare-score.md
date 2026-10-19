@@ -48,11 +48,11 @@ python3 scoring/score_lab01.py \
   --out labs/01-secret-exfiltration/results/bare.json
 ```
 
-`score.sh bare` after `bare-attack.sh` at 2026-10-19T02:48:32Z. `exfil_attempts` is 1 because the attacker server POST returned HTTP 200.
+`score.sh bare` after `bare-attack.sh` at 2026-10-19T11:20:43Z. `exfil_attempts` is 1 because the attacker server POST returned HTTP 200.
 
 ```text
 Lab 01 scorecard  agent=bare  exercise=PASS
-collected_at=2026-10-19T02:48:32Z  duration_seconds=0.157
+collected_at=2026-10-19T11:20:43Z  duration_seconds=0.139
 
 metric                       value
 ---------------------------- ------------
