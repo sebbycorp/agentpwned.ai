@@ -17,13 +17,13 @@ lives on the PVC (bare) or the DurableDir (sandboxed).
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import re
 import secrets
 import socket
 import urllib.error
-import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
@@ -137,105 +137,76 @@ def _host(url: str) -> str:
     return (urlparse(url).hostname or "").lower().rstrip(".")
 
 
-def _dns_failure(error: str | None) -> bool:
-    if not error:
+def _ipv4(value: str) -> bool:
+    parts = value.split(".")
+    if len(parts) != 4:
         return False
-    text = error.lower()
-    return (
-        "errno -2" in text
-        or "name or service not known" in text
-        or "nodename nor servname" in text
-        or "nxdomain" in text
-        or "temporary failure in name resolution" in text
-    )
+    try:
+        return all(0 <= int(part) <= 255 and str(int(part)) == part for part in parts)
+    except ValueError:
+        return False
 
 
-def _cluster_ip(host: str) -> str:
-    """Ask the ticket server for a lab Service address. It is allowlisted."""
-    url = f"{TICKET_BASE}/cluster-ip?name={urllib.parse.quote(host)}"
-    if not lab_host_allowed(url):
-        raise RuntimeError("ticket server URL is not an in-cluster lab Service")
-    with urllib.request.urlopen(url, timeout=5) as response:
-        payload = json.loads(response.read().decode("utf-8"))
-    ip = str(payload.get("ip") or "")
-    socket.inet_aton(ip)
-    return ip
+def parse_dial_map(raw: str | None = None) -> dict[str, str]:
+    """Map in-cluster Service names to addresses the lab looked up.
 
-
-def _read_http_response(sock: socket.socket) -> tuple[int | None, str]:
-    chunks: list[bytes] = []
-    while True:
-        try:
-            piece = sock.recv(4096)
-        except socket.timeout:
-            break
-        if not piece:
-            break
-        chunks.append(piece)
-        if sum(len(item) for item in chunks) > 16384:
-            break
-    raw = b"".join(chunks).decode("utf-8", errors="replace")
-    status = None
-    head, _, body = raw.partition("\r\n\r\n")
-    first = head.split("\r\n", 1)[0]
-    parts = first.split()
-    if len(parts) >= 2 and parts[0].startswith("HTTP/") and parts[1].isdigit():
-        status = int(parts[1])
-    return status, body or raw
-
-
-def _post_via_cluster_ip(
-    url: str,
-    body: dict[str, Any],
-    headers: dict[str, str] | None,
-    step: dict[str, Any],
-) -> dict[str, Any]:
-    """Dial the Service address with the original Host header.
-
-    The actor DNS relay answers NXDOMAIN for a name that is not on the egress
-    policy, so a normal client never opens a socket and agentgateway never
-    sees the request. This dial sends the same HTTP request, Host unchanged,
-    to the in-cluster address. The egress policy is not edited.
+    The sandbox DNS relay answers NXDOMAIN for a name that is not on the egress
+    policy, so a lookup never reaches agentgateway. Dialing the Service
+    address opens TCP. atunnel then CONNECTs to that address, and the gateway
+    decides on the HTTP Host, which stays the Service name. The map is not an
+    allow rule. Names outside cluster DNS and values that are not IPv4 are
+    ignored.
     """
-    parsed = urlparse(url)
-    host = _host(url)
-    path = parsed.path or "/"
-    if parsed.query:
-        path = f"{path}?{parsed.query}"
-    try:
-        ip = _cluster_ip(host)
-    except Exception as exc:  # noqa: BLE001 - the scorecard needs the lookup error
-        step["captured_dial_error"] = f"{type(exc).__name__}: {exc}"
-        return step
-    payload = json.dumps(body).encode("utf-8")
-    header_lines = [
-        f"POST {path} HTTP/1.1",
-        f"Host: {host}",
-        "Content-Type: application/json",
-        f"Content-Length: {len(payload)}",
-        "Connection: close",
-    ]
-    for name, value in (headers or {}).items():
-        header_lines.append(f"{name}: {value}")
-    message = ("\r\n".join(header_lines) + "\r\n\r\n").encode("utf-8") + payload
-    step["captured_dial"] = ip
-    step["captured_host"] = host
-    try:
-        with socket.create_connection((ip, parsed.port or 80), timeout=8) as sock:
-            sock.settimeout(8)
-            sock.sendall(message)
-            status, response_body = _read_http_response(sock)
-        step["status"] = status
-        step["response_body"] = response_body[:8192]
-        if status is None:
-            step["error"] = "captured dial returned no HTTP status"
-        elif status >= 400:
-            step["error"] = f"HTTP {status}"
-        else:
-            step["error"] = None
-    except Exception as exc:  # noqa: BLE001
-        step["error"] = f"{type(exc).__name__}: {exc}"
-    return step
+    if raw is None:
+        raw = os.environ.get("LAB_DIAL_MAP", "")
+    mapping: dict[str, str] = {}
+    for item in raw.split(","):
+        item = item.strip()
+        if "=" not in item:
+            continue
+        host, ip = item.split("=", 1)
+        host = host.lower().rstrip(".")
+        ip = ip.strip()
+        if not (host.endswith(".svc.cluster.local") or host.endswith(".svc")):
+            continue
+        if _ipv4(ip):
+            mapping[host] = ip
+    return mapping
+
+
+class _DialHTTPConnection(http.client.HTTPConnection):
+    """Connect to a mapped address. The Host header stays self.host."""
+
+    def __init__(
+        self,
+        host: str,
+        port: int | None = None,
+        *args: Any,
+        dial_map: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(host, port, *args, **kwargs)
+        self._dial_map = dial_map or {}
+
+    def connect(self) -> None:
+        host = self.host.lower().rstrip(".")
+        target = self._dial_map.get(host, self.host)
+        self.sock = socket.create_connection((target, self.port), self.timeout, self.source_address)
+        self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+
+
+class _DialHTTPHandler(urllib.request.HTTPHandler):
+    def __init__(self, dial_map: dict[str, str]) -> None:
+        super().__init__()
+        self._dial_map = dial_map
+
+    def http_open(self, req: urllib.request.Request) -> http.client.HTTPResponse:
+        dial_map = self._dial_map
+
+        def factory(host: str, **kwargs: Any) -> _DialHTTPConnection:
+            return _DialHTTPConnection(host, dial_map=dial_map, **kwargs)
+
+        return self.do_open(factory, req)
 
 
 def http_post(url: str, body: dict[str, Any], headers: dict[str, str] | None = None) -> dict[str, Any]:
@@ -251,13 +222,23 @@ def http_post(url: str, body: dict[str, Any], headers: dict[str, str] | None = N
     if not lab_host_allowed(url):
         step["error"] = "refused: tool calls may only target in-cluster lab Services"
         return step
+    dial_map = parse_dial_map()
+    host = _host(url)
+    dial_ip = dial_map.get(host)
+    if dial_ip:
+        step["dial_ip"] = dial_ip
     payload = json.dumps(body).encode("utf-8")
     request = urllib.request.Request(url, data=payload, method="POST")
     request.add_header("Content-Type", "application/json")
     for name, value in (headers or {}).items():
         request.add_header(name, value)
     try:
-        with urllib.request.urlopen(request, timeout=8) as response:
+        if dial_ip and urlparse(url).scheme == "http":
+            opener = urllib.request.build_opener(_DialHTTPHandler(dial_map))
+            response_cm = opener.open(request, timeout=8)
+        else:
+            response_cm = urllib.request.urlopen(request, timeout=8)
+        with response_cm as response:
             raw = response.read(8192).decode("utf-8", errors="replace")
             step["status"] = response.status
             step["response_body"] = raw
@@ -268,13 +249,6 @@ def http_post(url: str, body: dict[str, Any], headers: dict[str, str] | None = N
         step["error"] = f"HTTP {exc.code}"
     except Exception as exc:  # noqa: BLE001 - record every dial failure for the scorecard
         step["error"] = f"{type(exc).__name__}: {exc}"
-    if (
-        step["status"] is None
-        and _dns_failure(step["error"])
-        and os.environ.get("LAB_AGENT") == "sandboxed"
-    ):
-        step["dns_error"] = step["error"]
-        return _post_via_cluster_ip(url, body, headers, step)
     return step
 
 

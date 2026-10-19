@@ -1,6 +1,8 @@
 # Actor egress policy for `kubectl ate create egress-policy`.
 # Metadata is filled by kubectl-ate. Two HTTP rules: the ticket server and the
 # vendor API. The attacker server is absent, so default-deny applies to it.
+# The actor dials that Service address from LAB_DIAL_MAP. That is not an
+# allow rule. The HTTP Host stays the Service name.
 # replaceHeaders is Substrate credential injection on this main pin. The actor
 # sends a placeholder. The gateway swaps in the Secret on the vendor hop only.
 # This pin has no method or path match. The confused-deputy challenge uses that.

@@ -12,7 +12,7 @@ plane: none
 <p class="because"><b>What this does.</b> Put a canary Secret in <code>lab02-bare</code> and apply the bare agent. <b>Why it matters.</b> The PVC is why a restart does not wipe the poison. The Secret is why this process can see a vendor key the sandboxed actor never gets.</p>
 <details class="why">
 <summary>Why?</summary>
-<p>kind's default StorageClass provisions the claim. The container mounts it at <code>/memory</code>. <code>CANARY_API_KEY</code> and <code>/secrets/api_key</code> are the same value. <code>LAB_AGENT=bare</code> so a DNS failure is not rewritten into a captured dial. On this arm the name resolves.</p>
+<p>kind's default StorageClass provisions the claim. The container mounts it at <code>/memory</code>. <code>CANARY_API_KEY</code> and <code>/secrets/api_key</code> are the same value. <code>LAB_DIAL_MAP</code> is unset here. Cluster DNS resolves the attacker server, so the callback reaches it.</p>
 </details>
 
 ```bash

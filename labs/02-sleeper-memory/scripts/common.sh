@@ -26,6 +26,32 @@ TAG_NAME="known-good"
 
 mkdir -p "${RESULTS_DIR}"
 
+# Lab 01's loader tags the short name. On containerd 2 / config version 4,
+# `ctr import` records docker.io/library/<name> and the short name is absent,
+# so the tag step exits and the install stops. Keep the kind load attempt,
+# then tag only when the imported name is different.
+load_kind_image() {
+  local image="$1"
+  local cluster="$2"
+  local imported=""
+  if kind load docker-image "${image}" --name "${cluster}"; then
+    return 0
+  fi
+  echo "kind load failed. Importing ${image} with ctr." >&2
+  docker save "${image}" | docker exec -i "${cluster}-control-plane" ctr -n k8s.io images import -
+  imported="$(docker exec "${cluster}-control-plane" ctr -n k8s.io images ls -q \
+    | grep -E "(^|/)(${image}|${IMAGE_LOCAL})$" | head -1 || true)"
+  if [[ -z "${imported}" ]]; then
+    echo "ctr import did not register ${image}" >&2
+    docker exec "${cluster}-control-plane" ctr -n k8s.io images ls >&2 || true
+    return 1
+  fi
+  if [[ "${imported}" != "docker.io/library/${IMAGE_LOCAL}" ]]; then
+    docker exec "${cluster}-control-plane" ctr -n k8s.io images tag \
+      "${imported}" "docker.io/library/${IMAGE_LOCAL}"
+  fi
+}
+
 new_canary() {
   python3 -c 'import secrets; print("lab02_canary_" + secrets.token_hex(12))'
 }

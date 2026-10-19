@@ -106,8 +106,33 @@ wait_rollout "${SANDBOXED_CONTEXT}" lab02-shared attacker-server
 wait_rollout "${SANDBOXED_CONTEXT}" lab02-shared ticket-server
 wait_rollout "${SANDBOXED_CONTEXT}" lab02 legit-api
 
+# The sandbox DNS relay answers NXDOMAIN for names that are not on the egress
+# policy, so a lookup never opens a socket and agentgateway never sees the
+# POST. Dialing the Service ClusterIP sends TCP through atunnel. The HTTP Host
+# stays the Service name, which is not on the allowlist, so the gateway denies
+# it. ticket-server and legit-api stay off this map: those names are allowed,
+# and DNS for them is forwarded.
+attacker_ip="$(kubectl --context "${SANDBOXED_CONTEXT}" -n lab02-shared get svc attacker-server -o jsonpath='{.spec.clusterIP}')"
+python3 - "${attacker_ip}" <<'PY'
+import sys
+def ipv4(value: str) -> bool:
+    parts = value.split(".")
+    if len(parts) != 4:
+        return False
+    try:
+        return all(0 <= int(part) <= 255 and str(int(part)) == part for part in parts)
+    except ValueError:
+        return False
+if not ipv4(sys.argv[1]):
+    sys.exit(f"refusing dial map: {sys.argv[1]} is not an IPv4 ClusterIP")
+PY
+dial_map="attacker-server.lab02-shared.svc.cluster.local=${attacker_ip}"
+echo "LAB_DIAL_MAP=${dial_map}"
+
 template="$(mktemp)"
-sed "s|IMAGE_DIGEST_REPLACED_BY_SCRIPT|${image_ref}|" \
+sed \
+  -e "s|IMAGE_DIGEST_REPLACED_BY_SCRIPT|${image_ref}|" \
+  -e "s|DIAL_MAP_REPLACED_BY_SCRIPT|${dial_map}|" \
   "${LAB_ROOT}/k8s/substrate-actor-template.yaml" > "${template}"
 
 kubectl-ate --context "${SANDBOXED_CONTEXT}" create atespace "${ATESPACE}"

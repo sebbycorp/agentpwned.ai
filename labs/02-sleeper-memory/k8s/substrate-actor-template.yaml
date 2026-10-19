@@ -28,6 +28,10 @@ containers:
         value: /memory/standing.json
       - name: LAB_TICKET_URL
         value: http://ticket-server.lab02-shared.svc.cluster.local
+      # Service address looked up by sandboxed-up.sh. Not an allow rule.
+      # The HTTP Host stays the Service name. agentgateway default-denies it.
+      - name: LAB_DIAL_MAP
+        value: DIAL_MAP_REPLACED_BY_SCRIPT
     volumeMounts:
       - name: memory
         mountPath: /memory
