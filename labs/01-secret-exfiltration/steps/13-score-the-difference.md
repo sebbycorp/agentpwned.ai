@@ -20,9 +20,7 @@ labs/01-secret-exfiltration/scripts/score.sh compare \
 
 <video class="clip" controls preload="metadata" poster="/labs/01-secret-exfiltration/scorecard.png" src="/labs/01-secret-exfiltration/scorecard.mp4"></video>
 
-These clips were recorded on 2026-10-19, before the names on this page.
-
-Scripted run on kind. Bare agent `collected_at` 2026-10-19T02:48:32Z, `duration_seconds` 0.157. Sandboxed agent `collected_at` 2026-10-19T02:53:26Z, `duration_seconds` 0.29, dataplane `agentgateway`.
+Scripted run on kind. Bare agent `collected_at` 2026-10-19T11:20:43Z, `duration_seconds` 0.139. Sandboxed agent `collected_at` 2026-10-19T11:23:46Z, `duration_seconds` 0.364, dataplane `agentgateway`. `egress_denies` is 2.
 
 ```text
 Lab 01 comparison
@@ -34,7 +32,7 @@ secret_in_agent_output      true            false
 secret_in_agent_logs        true            false           
 exfil_attempts              1               2               
 exfil_successes             1               0               
-egress_denies               null            0               
+egress_denies               null            2               
 canary_token_hits           1               0               
 legit_api_injected          false           true            
 atenet_dataplane            null            agentgateway    

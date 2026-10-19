@@ -76,11 +76,11 @@ kubectl --context kind-lab01-sandboxed get nodes
 docker inspect -f '{{.State.Running}}' kind-registry
 ```
 
-`rev-parse` printed `3d3b92921bd68931c509e1b5bd57df00e76ffff0`. `sandboxed-up.sh` printed `iptables statistic match is missing. Switching kube-proxy to nftables.` and the kube-proxy daemonset rolled out. The node check then printed Ready. The registry container was running.
+`rev-parse` printed `3d3b92921bd68931c509e1b5bd57df00e76ffff0`. `sandboxed-up.sh` printed `iptables statistic match is missing. Switching kube-proxy to nftables.` and the kube-proxy daemonset rolled out. The node check then printed Ready. Listed again after the score run, it was still Ready, age 4m2s, v1.37.0. The registry container was running.
 
 ```text
 NAME                            STATUS   ROLES           AGE   VERSION
-lab01-sandboxed-control-plane   Ready    control-plane   34s   v1.37.0
+lab01-sandboxed-control-plane   Ready    control-plane   4m2s   v1.37.0
 true
 ```
 

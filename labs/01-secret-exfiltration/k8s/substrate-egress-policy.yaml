@@ -1,6 +1,9 @@
 # Actor egress policy for `kubectl ate create egress-policy`.
 # Metadata is filled by kubectl-ate. One HTTP rule: the vendor API only.
-# The attacker server is absent, so default-deny applies to it.
+# The attacker server and the dummy are absent, so default-deny applies to them.
+# The actor dials those Service addresses from LAB_DIAL_MAP. That is not an
+# allow rule. The HTTP Host stays the Service name, and this policy does not
+# list it, so agentgateway returns 403.
 # replaceHeaders is Substrate credential injection on this main pin. The actor sends
 # a placeholder. The gateway swaps in the Secret. The actor never holds it.
 rules:

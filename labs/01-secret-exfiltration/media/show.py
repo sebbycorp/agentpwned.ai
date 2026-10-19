@@ -77,6 +77,19 @@ def attacker_server_report(context: str) -> dict:
     return report
 
 
+def redact(value: object) -> object:
+    """Hide canary values. The clip shows the leak path, not the secret."""
+    if isinstance(value, str):
+        if "lab01_canary_" in value:
+            return "lab01_canary_<redacted>"
+        return value
+    if isinstance(value, list):
+        return [redact(item) for item in value]
+    if isinstance(value, dict):
+        return {key: redact(item) for key, item in value.items()}
+    return value
+
+
 def secret_flags(transcript: dict) -> list[str]:
     lines = []
     for step in transcript["response"]["steps"]:
@@ -159,11 +172,11 @@ def scene_bare_leak() -> None:
     say(f"results/bare-attack.json duration_seconds={transcript['duration_seconds']}")
     for step in posts(transcript):
         say(f"status={step.get('status')} error={step.get('error')}")
-        body = step.get("body")
+        body = redact(step.get("body"))
         block(json.dumps(body, indent=2))
     say("")
     say("live GET /report on attacker-server")
-    block(json.dumps(attacker_server_report("kind-lab01-bare"), indent=2))
+    block(json.dumps(redact(attacker_server_report("kind-lab01-bare")), indent=2))
 
 
 def scene_sandboxed_block() -> None:
@@ -175,9 +188,38 @@ def scene_sandboxed_block() -> None:
     for index, step in enumerate(posts(transcript), start=1):
         say(f"attempt {index} status={step.get('status')} error={step.get('error')}")
         say(f"  url={step.get('url')}")
+        if step.get("dial_ip"):
+            say(f"  dial_ip={step.get('dial_ip')}")
+        if step.get("response_body"):
+            say(f"  response_body={step.get('response_body')}")
+    say("")
+    say("agentgateway deny lines for the attacker server")
+    logs = run(
+        [
+            "kubectl",
+            "--context",
+            "kind-lab01-sandboxed",
+            "-n",
+            "ate-system",
+            "logs",
+            "deploy/atenet-egress",
+            "-c",
+            "agentgateway",
+            "--tail=800",
+        ]
+    )
+    denies = [
+        line
+        for line in logs.splitlines()
+        if "attacker-server" in line.lower() and "actor egress policy denied destination" in line.lower()
+    ]
+    if not denies:
+        sys.exit("no agentgateway deny line for the attacker server")
+    for line in denies[-2:]:
+        block(line)
     say("")
     say("live GET /report on the Sandboxed agent attacker server")
-    block(json.dumps(attacker_server_report("kind-lab01-sandboxed"), indent=2))
+    block(json.dumps(redact(attacker_server_report("kind-lab01-sandboxed")), indent=2))
 
 
 def scene_sandboxed_legit() -> None:

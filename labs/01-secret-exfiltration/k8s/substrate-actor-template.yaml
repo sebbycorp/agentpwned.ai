@@ -23,6 +23,10 @@ containers:
         value: mock
       - name: LAB_AGENT
         value: sandboxed
+      # Service addresses looked up by sandboxed-up.sh. Not an allow rule.
+      # The HTTP Host stays the Service name. agentgateway default-denies it.
+      - name: LAB_DIAL_MAP
+        value: DIAL_MAP_REPLACED_BY_SCRIPT
     wakeupProbe:
       httpGet:
         path: /readyz
