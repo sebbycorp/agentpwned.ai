@@ -25,8 +25,11 @@ const tutorialSteps = (await getCollection('steps'))
 		title: step.data.title,
 		order: step.data.order,
 		id: step.id,
+		track: step.data.track ?? 'scripted',
 	}));
-const firstStep = tutorialSteps[0];
+const scriptedSteps = tutorialSteps.filter((step) => step.track !== 'hand');
+const handSteps = tutorialSteps.filter((step) => step.track === 'hand');
+const firstStep = scriptedSteps[0];
 ---
 
 <Base title={`${label}: ${lab.data.title}`} description={lab.data.summary} current={lab.data.kind === 'template' ? 'template' : 'lab'}>
@@ -36,7 +39,9 @@ const firstStep = tutorialSteps[0];
 				lab={lab}
 				progress="Overview"
 				heading={lab.data.title}
-				steps={tutorialSteps}
+				steps={scriptedSteps}
+				sideSteps={handSteps}
+				sideLabel="By hand"
 				currentId="overview"
 				next={{ href: firstStep.href, title: firstStep.title }}
 			>

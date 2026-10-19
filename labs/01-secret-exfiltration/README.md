@@ -1,14 +1,16 @@
 # Lab 01: Secret Exfiltration
 
-One hostile prompt. Two clusters. Arm A holds the canary. Arm B is a Substrate actor on Envoy: the actor does not hold the key, the allowlisted call gets it, the sink does not.
+Pwn an agent. See exactly how. Then lock it down.
 
-![Bare leaks. Envoy injects and blocks.](diagrams/story-07-compare.svg)
+One hostile prompt. Two clusters. Arm A holds the canary. Arm B is a Substrate actor on agentgateway: the actor does not hold the key, the allowlisted call gets it, the sink does not.
+
+![Bare leaks. agentgateway injects and blocks.](diagrams/story-07-compare.svg)
 
 The scorecard is read from the cluster after the run.
 
 **Safety.** Canary values only. The sink stays inside the kind cluster. Do not retarget the prompt.
 
-Agent Substrate is pre-1.0. This lab pins **v0.5.0** (`e8d40c33`).
+Agent Substrate is pre-1.0. This lab pins unreleased main `3d3b92921bd68931c509e1b5bd57df00e76ffff0` and agentgateway `cr.agentgateway.dev/agentgateway@sha256:fc64f1093a5f7fd32c9cc58d2b53f0a5d5781f7960e3a1ac0a59db4f6a39850f` (revision `955d56f`). v0.5.0 plus its pinned agentgateway returns HTTP 403 `name: Required value`.
 
 Start at [Step 1: The agent](steps/01-why-this-lab.md).
 
@@ -17,10 +19,32 @@ Start at [Step 1: The agent](steps/01-why-this-lab.md).
 1. [The agent](steps/01-why-this-lab.md)
 2. [What it can touch](steps/02-prerequisites.md)
 3. [Bring up Arm A](steps/03-bring-up-arm-a.md)
-4. [The leak](steps/04-attack-the-bare-agent.md)
-5. [Arm A score](steps/05-score-arm-a.md)
-6. [Envoy](steps/06-defend-with-substrate.md)
-7. [The difference](steps/07-score-the-difference.md)
-8. [Tear down](steps/08-cleanup-and-recap.md)
+4. [Predict Arm A](steps/04-predict-bare.md)
+5. [Pwn it](steps/05-attack-the-bare-agent.md)
+6. [What just happened](steps/06-what-just-happened.md)
+7. [Arm A score](steps/07-score-arm-a.md)
+8. [agentgateway](steps/08-defend-with-substrate.md)
+9. [How injection works](steps/09-how-injection-works.md)
+10. [Predict Arm B](steps/10-predict-sandbox.md)
+11. [Pwn it again](steps/11-attack-arm-b.md)
+12. [Where it stopped](steps/12-where-it-stopped.md)
+13. [The difference](steps/13-score-the-difference.md)
+14. [Tear down](steps/14-cleanup-and-recap.md)
 
 Instructor notes: [instructor.md](instructor.md).
+
+## Build it by hand
+
+The scripted steps are the quick path. This track runs the same commands one at a time. Each page says what the step does. Open Why? for the longer note.
+
+1. [Prerequisites](hand/01-prerequisites.md)
+2. [Arm A cluster](hand/02-arm-a-cluster.md)
+3. [Arm A workloads](hand/03-arm-a-workloads.md)
+4. [Arm A agent](hand/04-arm-a-agent.md)
+5. [Arm A score](hand/05-arm-a-score.md)
+6. [Substrate cluster](hand/06-substrate-kind.md)
+7. [Substrate install](hand/07-substrate-install.md)
+8. [Arm B services](hand/08-arm-b-services.md)
+9. [Arm B actor](hand/09-arm-b-actor.md)
+10. [Arm B score](hand/10-arm-b-score.md)
+11. [Tear down](hand/11-teardown.md)

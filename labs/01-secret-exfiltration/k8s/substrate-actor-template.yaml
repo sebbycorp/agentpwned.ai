@@ -4,6 +4,8 @@
 #
 # Golden snapshots are disabled on purpose: this lab cold-boots the agent.
 # Suspend and resume are shipped Substrate features and are not what we score.
+# This pin has no sandboxConfig on ActorTemplate. The WorkerPool selects
+# the sandbox class. workerSelector below picks the egress demo pool.
 metadata:
   atespace: lab01
   name: exfil-agent
@@ -31,9 +33,6 @@ resources:
       quantity: "500m"
     - name: memory
       quantity: 512Mi
-sandboxConfig:
-  sandboxClass: gvisor
-  configName: gvisor-default
 snapshotConfig:
   preferredFidelity: SNAPSHOT_FIDELITY_VOLUMES
   storageLocation: gs://ate-snapshots/lab01/

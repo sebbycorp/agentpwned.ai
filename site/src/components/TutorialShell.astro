@@ -21,18 +21,38 @@ interface Props {
 	heading: string;
 	lede?: string;
 	steps: StepLink[];
+	sideSteps?: StepLink[];
+	sideLabel?: string;
 	currentId: string;
 	status?: StatusTone | null;
 	prev?: { href: string; title: string } | null;
 	next?: { href: string; title: string } | null;
+	predict?: string;
+	reveal?: string;
+	answer?: string;
 }
 
-const { lab, progress, heading, lede, steps, currentId, status = null, prev = null, next = null } = Astro.props;
+const {
+	lab,
+	progress,
+	heading,
+	lede,
+	steps,
+	sideSteps = [],
+	sideLabel = 'By hand',
+	currentId,
+	status = null,
+	prev = null,
+	next = null,
+	predict,
+	reveal,
+	answer,
+} = Astro.props;
 
 function tone(value: string | undefined): string {
 	if (!value) return '';
 	const lower = value.toLowerCase();
-	if (lower.includes('200') || lower.includes('hidden') || lower.includes('blocked') || lower === 'envoy') return 'ok';
+	if (lower.includes('200') || lower.includes('hidden') || lower.includes('blocked') || lower === 'envoy' || lower === 'agentgateway') return 'ok';
 	if (lower.includes('leak') || lower.includes('visible') || lower.includes('placeholder') || lower.includes('none')) return 'bad';
 	return '';
 }
@@ -85,6 +105,23 @@ const overviewHref = `/labs/${lab.id}/`;
 						))
 					}
 				</ol>
+				{
+					sideSteps.length > 0 && (
+						<>
+							<p class="kicker">{sideLabel}</p>
+							<ol>
+								{sideSteps.map((step) => (
+									<li>
+										<a href={step.href} aria-current={step.id === currentId ? 'step' : undefined}>
+											<span class="step-index">{String(step.order).padStart(2, '0')}</span>
+											{step.title}
+										</a>
+									</li>
+								))}
+							</ol>
+						</>
+					)
+				}
 			</nav>
 			<div class="lab-body">
 				{
@@ -110,6 +147,26 @@ const overviewHref = `/labs/${lab.id}/`;
 					)
 				}
 				<slot />
+				{
+					predict && (
+						<form class="predict" data-predict={predict}>
+							<p class="predict-label">Predict</p>
+							<button type="button" data-choice="leaks" aria-pressed="false">
+								Leaks
+							</button>
+							<button type="button" data-choice="blocked" aria-pressed="false">
+								Blocked
+							</button>
+						</form>
+					)
+				}
+				{
+					reveal && answer && (
+						<p class="reveal" data-reveal={reveal} data-answer={answer}>
+							<span data-reveal-text>Pick a guess on the predict step to compare it here.</span>
+						</p>
+					)
+				}
 				<nav class="pager" aria-label="Step">
 					{
 						prev ? (
@@ -123,7 +180,13 @@ const overviewHref = `/labs/${lab.id}/`;
 					}
 					{
 						next ? (
-							<a class="button pager-next" href={next.href}>
+							<a
+								class:list={['button', 'pager-next', { 'is-locked': Boolean(predict) }]}
+								href={next.href}
+								aria-disabled={predict ? 'true' : undefined}
+								tabindex={predict ? -1 : undefined}
+								data-predict-next={predict || undefined}
+							>
 								Next
 								<span>{next.title}</span>
 							</a>
@@ -136,3 +199,46 @@ const overviewHref = `/labs/${lab.id}/`;
 		</div>
 	</div>
 </article>
+<script is:inline>
+	const labels = { leaks: 'Leaks', blocked: 'Blocked' };
+	const form = document.querySelector('[data-predict]');
+	const next = document.querySelector('[data-predict-next]');
+	if (form && next) {
+		const key = 'lab01-predict-' + form.getAttribute('data-predict');
+		const buttons = form.querySelectorAll('[data-choice]');
+		const unlock = (choice) => {
+			localStorage.setItem(key, choice);
+			buttons.forEach((button) => {
+				button.setAttribute('aria-pressed', button.getAttribute('data-choice') === choice ? 'true' : 'false');
+			});
+			next.classList.remove('is-locked');
+			next.removeAttribute('aria-disabled');
+			next.removeAttribute('tabindex');
+		};
+		buttons.forEach((button) => {
+			button.addEventListener('click', () => unlock(button.getAttribute('data-choice')));
+		});
+		const stored = localStorage.getItem(key);
+		if (stored === 'leaks' || stored === 'blocked') unlock(stored);
+		next.addEventListener('click', (event) => {
+			if (next.classList.contains('is-locked')) event.preventDefault();
+		});
+	}
+	const reveal = document.querySelector('[data-reveal]');
+	if (reveal) {
+		const key = 'lab01-predict-' + reveal.getAttribute('data-reveal');
+		const answer = reveal.getAttribute('data-answer');
+		const guess = localStorage.getItem(key);
+		const answerLabel = labels[answer] || answer;
+		const text = reveal.querySelector('[data-reveal-text]');
+		if (text) {
+			if (guess !== 'leaks' && guess !== 'blocked') {
+				text.textContent = 'No guess stored in this browser. The run: ' + answerLabel + '.';
+			} else if (guess === answer) {
+				text.textContent = 'You guessed ' + labels[guess] + '. The run matched: ' + answerLabel + '.';
+			} else {
+				text.textContent = 'You guessed ' + labels[guess] + '. The run: ' + answerLabel + '.';
+			}
+		}
+	}
+</script>

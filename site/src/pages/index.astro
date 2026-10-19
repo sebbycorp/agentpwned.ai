@@ -16,10 +16,10 @@ const labs = await getLabs();
 			<div>
 				<p class="kicker">Educational lab</p>
 				<h1>agentpwned.ai</h1>
-				<p class="tagline">Agents get pwned when they run without a sandbox.</p>
+				<p class="tagline">Pwn an agent. See exactly how. Then lock it down.</p>
 				<p class="lede">
-					A hands-on lab for security engineers, platform engineers, and students. Attack a bare agent, put the same
-					agent in a sandbox, and score the difference.
+					A hands-on lab for security engineers, platform engineers, and students. You run the attack, replay what the
+					agent did, then lock the same agent down. Agents get pwned when they run without a sandbox.
 				</p>
 				<div class="actions">
 					<a class="button" href="/labs/">Browse the labs</a>
@@ -108,28 +108,42 @@ const labs = await getLabs();
 		<div class="wrap">
 			<h2>The lab loop</h2>
 			<p class="intro">
-				Each lab repeats the same three moves. You do the attack, you repeat it with a sandbox in place, and you
-				measure what changed.
+				Lab 01 is that line, in order. You pwn the bare agent, replay the leak from your logs, lock it down, pwn it
+				again, and score the difference.
 			</p>
 			<ol class="steps">
 				<li class="step">
 					<p class="step-no">01</p>
-					<h3>Attack a bare agent</h3>
+					<h3>Pwn it</h3>
 					<p>
-						Run the agent with the secret in reach and the network open. Use the lab prompt against that setup and
-						record what leaves.
+						Run the prompt against the bare agent. Your terminal and the in-cluster sink show the canary landing.
 					</p>
 				</li>
 				<li class="step">
 					<p class="step-no">02</p>
-					<h3>Attack the same agent in a sandbox</h3>
+					<h3>See exactly how</h3>
 					<p>
-						Keep the task. In Lab 01 the sandboxed run is an Agent Substrate actor with no copy of the key, an egress
-						allowlist, and credential injection at the gateway.
+						Replay the run. Where the secret was read, the request that left, why nothing stopped it, and what the
+						sink stored.
 					</p>
 				</li>
 				<li class="step">
 					<p class="step-no">03</p>
+					<h3>Lock it down</h3>
+					<p>
+						Same agent as an Agent Substrate actor. No copy of the key. agentgateway allowlists egress and injects
+						the credential outside the process.
+					</p>
+				</li>
+				<li class="step">
+					<p class="step-no">04</p>
+					<h3>Pwn it again</h3>
+					<p>
+						Same attack, plus the in-cluster break-it prompts. Replay where agentgateway stopped each attempt.
+					</p>
+				</li>
+				<li class="step">
+					<p class="step-no">05</p>
 					<h3>Score the difference</h3>
 					<p>
 						Compare the two runs with the Lab 01 scorecard. It reads the cluster after the run. This site does not

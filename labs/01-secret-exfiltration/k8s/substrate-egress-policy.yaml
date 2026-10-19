@@ -1,7 +1,7 @@
 # Actor egress policy for `kubectl ate create egress-policy`.
 # Metadata is filled by kubectl-ate. One HTTP rule: the vendor API only.
 # The attacker sink is absent, so default-deny applies to it.
-# replaceHeaders is Substrate credential injection (v0.5.0). The actor sends
+# replaceHeaders is Substrate credential injection on this main pin. The actor sends
 # a placeholder. The gateway swaps in the Secret. The actor never holds it.
 rules:
   - http:

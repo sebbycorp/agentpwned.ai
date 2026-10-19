@@ -95,46 +95,53 @@ if (statSync(repoLabs, { throwIfNoEntry: false })?.isDirectory()) {
 		if (slug !== name) errors.push(`${name}/lab.md slug must match the folder name`);
 		publishedIds.add(name);
 		const readme = readFileSync(readmeFile, 'utf8');
-		const stepsDir = join(folder, 'steps');
-		const stepFiles = statSync(stepsDir, { throwIfNoEntry: false })?.isDirectory()
-			? readdirSync(stepsDir)
-					.filter((file) => /^\d\d-.+\.md$/.test(file))
-					.sort()
-			: [];
-		if (stepFiles.length > 0) {
-			if (!readme.includes(`(steps/${stepFiles[0]})`)) {
-				errors.push(`${name}/README.md must link to steps/${stepFiles[0]}`);
+		const checkSequence = (dirName) => {
+			const stepsDir = join(folder, dirName);
+			const stepFiles = statSync(stepsDir, { throwIfNoEntry: false })?.isDirectory()
+				? readdirSync(stepsDir)
+						.filter((file) => /^\d\d-.+\.md$/.test(file))
+						.sort()
+				: [];
+			if (stepFiles.length === 0) return stepFiles;
+			if (!readme.includes(`(${dirName}/${stepFiles[0]})`)) {
+				errors.push(`${name}/README.md must link to ${dirName}/${stepFiles[0]}`);
 			}
 			stepFiles.forEach((file, index) => {
 				const expected = String(index + 1).padStart(2, '0');
 				if (!file.startsWith(`${expected}-`)) {
-					errors.push(`${name}/steps/${file} breaks the 01, 02, ... sequence`);
+					errors.push(`${name}/${dirName}/${file} breaks the 01, 02, ... sequence`);
 				}
 				const text = readFileSync(join(stepsDir, file), 'utf8');
 				const fence = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
 				if (!fence) {
-					errors.push(`${name}/steps/${file} is missing frontmatter`);
+					errors.push(`${name}/${dirName}/${file} is missing frontmatter`);
 					return;
 				}
 				if (!field(fence[1], 'title') || !field(fence[1], 'summary')) {
-					errors.push(`${name}/steps/${file} needs title and summary`);
+					errors.push(`${name}/${dirName}/${file} needs title and summary`);
 				}
 				for (const key of ['canary', 'sink', 'legit', 'plane']) {
-					if (!field(fence[1], key)) errors.push(`${name}/steps/${file} needs ${key}`);
+					if (!field(fence[1], key)) errors.push(`${name}/${dirName}/${file} needs ${key}`);
 				}
 				if (!text.includes('../diagrams/')) {
-					errors.push(`${name}/steps/${file} needs a diagram`);
+					errors.push(`${name}/${dirName}/${file} needs a diagram`);
 				}
 				if (index === 0 && !text.includes('(../README.md)')) {
-					errors.push(`${name}/steps/${file} must link back to ../README.md`);
+					errors.push(`${name}/${dirName}/${file} must link back to ../README.md`);
 				}
 				if (index > 0 && !text.includes(`(${stepFiles[index - 1]})`)) {
-					errors.push(`${name}/steps/${file} must link back to ${stepFiles[index - 1]}`);
+					errors.push(`${name}/${dirName}/${file} must link back to ${stepFiles[index - 1]}`);
 				}
 				if (index < stepFiles.length - 1 && !text.includes(`(${stepFiles[index + 1]})`)) {
-					errors.push(`${name}/steps/${file} must link onward to ${stepFiles[index + 1]}`);
+					errors.push(`${name}/${dirName}/${file} must link onward to ${stepFiles[index + 1]}`);
 				}
 			});
+			return stepFiles;
+		};
+		const stepFiles = checkSequence('steps');
+		checkSequence('hand');
+		if (stepFiles.length > 0) {
+			/* sequence checked above */
 		} else {
 			let cursor = 0;
 			for (const line of readme.split(/\r?\n/)) {

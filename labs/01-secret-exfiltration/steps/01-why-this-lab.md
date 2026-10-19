@@ -9,6 +9,8 @@ plane: none
 
 ![Agent. A process with a socket.](../diagrams/story-01-agent.svg)
 
+Pwn an agent. See exactly how. Then lock it down.
+
 The agent is a process. It can read what you put on it, and it can open a socket.
 
 [Overview](../README.md)

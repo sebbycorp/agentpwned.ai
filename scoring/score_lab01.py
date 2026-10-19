@@ -216,13 +216,13 @@ def collect(arm: str, context: str, results_dir: Path) -> dict:
         if atenet_dataplane == "agentgateway":
             notes.append(
                 "egress_denies counts agentgateway log lines that mention both the sink and a denial. "
-                "v0.5.0 does not run an ext-proc sidecar on this dataplane. "
-                "Zero can mean the name was refused before a gateway log line. The sink hit count is the success signal."
+                "This dataplane has no ext-proc sidecar. "
+                "Zero can mean the name never reached the gateway. The sink hit count is the success signal."
             )
         else:
             notes.append(
-                "egress_denies counts ext-proc lines that mention both the sink and a denial. "
-                "Zero can mean DNS was refused before the gateway. The sink hit count is the success signal."
+                "egress_denies counts gateway log lines that mention both the sink and a denial. "
+                "Zero can mean the name never reached the gateway. The sink hit count is the success signal."
             )
 
     duration = 0.0

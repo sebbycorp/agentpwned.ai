@@ -6,6 +6,8 @@ export function rewriteTutorialLinks(markdown: string, labId: string): string {
 	return markdown
 		.replace(/\]\(\.\.\/README\.md\)/g, `](/labs/${labId}/)`)
 		.replace(/\]\(steps\/(\d\d-[^)\s]+)\.md\)/g, stepHref)
+		.replace(/\]\(\.\.\/hand\/(\d\d-[^)\s]+)\.md\)/g, stepHref)
+		.replace(/\]\(hand\/(\d\d-[^)\s]+)\.md\)/g, stepHref)
 		.replace(/\]\((\d\d-[^)\s]+)\.md\)/g, stepHref);
 }
 
