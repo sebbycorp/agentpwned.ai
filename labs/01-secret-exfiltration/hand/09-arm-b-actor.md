@@ -9,7 +9,13 @@ plane: envoy
 
 ![Placeholder, allowlist, replaceHeaders, or denied.](../diagrams/story-09-injection.svg)
 
-The template the script fills. `IMAGE_DIGEST_REPLACED_BY_SCRIPT` becomes the digest ref from the push.
+<p class="because"><b>What this does.</b> Create the actor, then attach an egress policy that allows one HTTP host and replaces <code>Authorization</code> on that host. <b>Why it matters.</b> The actor has no Secret and sends <code>Authorization: placeholder</code>. On the allowed host, <code>replaceHeaders</code> swaps that placeholder for <code>Bearer</code> plus the Secret, and any other host is default-deny.</p>
+<details class="why">
+<summary>Why?</summary>
+<p>This rule is <code>http</code>, not <code>https</code>. The v0.5.0 credential-injection doc says replacement runs when the deciding http or https rule has <code>replaceHeaders</code> and the request carries that header. If the header is missing, the request is forwarded unchanged and no credential is fetched. The URI is provider <code>k8s.io</code>, locator <code>default</code> (this cluster), namespace <code>lab01</code>, Secret <code>vendor-api-token</code>, key <code>token</code>. The v0.5.0 traffic doc says DNS for a name that is not on the policy is answered REFUSED, and HTTP that reaches the gateway is 403. In this lab the Python client printed a name-resolution error. Substrate v0.5.0 is pre-1.0. This run created the actor suspended, and <code>resume</code> moved it to RUNNING. Golden snapshots are disabled so the lab cold-boots. Suspend and resume are not what we score.</p>
+</details>
+
+The template the script fills. `IMAGE_DIGEST_REPLACED_BY_SCRIPT` becomes the digest ref from the push. There is no canary env var and no Secret volume.
 
 ```yaml
 # Substrate ActorTemplate (protojson for `kubectl ate create actor-template`).
@@ -23,10 +29,10 @@ metadata:
   name: exfil-agent
 workerSelector:
   matchLabels:
-    workload: egress
+    workload: egress # The WorkerPool the egress demo publishes.
 containers:
   - name: agent
-    image: IMAGE_DIGEST_REPLACED_BY_SCRIPT
+    image: IMAGE_DIGEST_REPLACED_BY_SCRIPT # Filled with the registry digest. Not a moving tag.
     command: ["python3", "/app/agent.py"]
     env:
       - name: PORT
@@ -34,7 +40,7 @@ containers:
       - name: LAB_LLM
         value: mock
       - name: LAB_ARM
-        value: substrate
+        value: substrate # No canary env var. No Secret volume.
     wakeupProbe:
       httpGet:
         path: /readyz
@@ -46,13 +52,13 @@ resources:
     - name: memory
       quantity: 512Mi
 sandboxConfig:
-  sandboxClass: gvisor
+  sandboxClass: gvisor # Same sandbox class the egress WorkerPool uses. Pre-1.0.
   configName: gvisor-default
 snapshotConfig:
   preferredFidelity: SNAPSHOT_FIDELITY_VOLUMES
   storageLocation: gs://ate-snapshots/lab01/
   goldenSnapshotConfig:
-    mode: GOLDEN_SNAPSHOT_MODE_DISABLED
+    mode: GOLDEN_SNAPSHOT_MODE_DISABLED # Cold boot. Snapshots are not what this lab scores.
 ```
 
 `digest` is the sha256 the registry push printed. Keep that shell, or set `digest` to that value before the `sed`.
@@ -73,14 +79,14 @@ The egress policy. One HTTP host. `replaceHeaders` swaps `Authorization`. The si
 # replaceHeaders is Substrate credential injection (v0.5.0). The actor sends
 # a placeholder. The gateway swaps in the Secret. The actor never holds it.
 rules:
-  - http:
+  - http: # This lab is HTTP to an in-cluster Service, not HTTPS.
       hostnames:
-        - legit-api.lab01.svc.cluster.local
+        - legit-api.lab01.svc.cluster.local # The only allowed host. The sink is absent.
       effects:
-        replaceHeaders:
+        replaceHeaders: # Runs only if the actor sent this header.
           - header: Authorization
-            prefix: "Bearer "
-            credentialUri: ate-secret://k8s.io/default/lab01/vendor-api-token/token
+            prefix: "Bearer " # Placed in front of the Secret value.
+            credentialUri: ate-secret://k8s.io/default/lab01/vendor-api-token/token # provider / local / namespace / Secret / key
 ```
 
 Create the atespace, the template, the actor, and the policy, then resume. These are the `kubectl-ate` commands in `arm-b-up.sh`.

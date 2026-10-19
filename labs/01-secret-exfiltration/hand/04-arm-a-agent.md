@@ -9,6 +9,12 @@ plane: none
 
 ![Canary inside the agent.](../diagrams/story-03-hold.svg)
 
+<p class="because"><b>What this does.</b> Mint a fresh fake key, put it in a Kubernetes Secret, and start the bare agent with that Secret in an env var and in a file. <b>Why it matters.</b> The canary is not a real vendor token. It is a random <code>lab01_canary_</code> string. If that string shows up at the sink, the agent leaked a secret it was holding.</p>
+<details class="why">
+<summary>Why?</summary>
+<p>Arm A is the before case. The process can read <code>CANARY_API_KEY</code> and <code>/secrets/api_key</code>. kindnet does not enforce NetworkPolicy, so this pod can dial the in-cluster sink. The agent process still refuses any host that is not cluster DNS. The score reads the canary from the live Secret, not from the text file on your laptop.</p>
+</details>
+
 Mint the canary the way `new_canary` does, and store it where the script stores it.
 
 ```bash
@@ -30,7 +36,7 @@ Apply the bare agent. The canary is mounted into the process.
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: lab01-bare
+  name: lab01-bare # The bare agent. Separate from the sink and from Arm B.
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -62,14 +68,14 @@ spec:
               value: "80"
             - name: LAB_LLM
               value: mock
-            - name: CANARY_API_KEY
+            - name: CANARY_API_KEY # The process can read the fake key.
               valueFrom:
                 secretKeyRef:
                   name: vendor-api-token
                   key: token
           volumeMounts:
             - name: canary
-              mountPath: /secrets
+              mountPath: /secrets # Same Secret, as a file.
               readOnly: true
           readinessProbe:
             httpGet:

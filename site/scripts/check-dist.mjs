@@ -105,6 +105,13 @@ const handActor = join(dist, 'labs/01-secret-exfiltration/09-arm-b-actor/index.h
 if (existsSync(handCluster) && !readFileSync(handCluster, 'utf8').includes('kind-arm-a.yaml')) {
 	errors.push('Lab 01 hand track is missing the Arm A kind command');
 }
+const handPrereq = join(dist, 'labs/01-secret-exfiltration/01-prerequisites/index.html');
+if (existsSync(handPrereq) && !readFileSync(handPrereq, 'utf8').includes('What this does')) {
+	errors.push('Lab 01 hand track is missing the step explanation');
+}
+if (existsSync(handActor) && !readFileSync(handActor, 'utf8').includes('class="why"')) {
+	errors.push('Lab 01 hand track is missing the Why block');
+}
 if (existsSync(handInstall) && !readFileSync(handInstall, 'utf8').includes('hack/install-ate-kind.sh')) {
 	errors.push('Lab 01 hand track is missing hack/install-ate-kind.sh');
 }

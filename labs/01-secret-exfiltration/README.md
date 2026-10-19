@@ -32,7 +32,7 @@ Instructor notes: [instructor.md](instructor.md).
 
 ## Build it by hand
 
-The scripted steps are the quick path. This track runs the same commands one at a time.
+The scripted steps are the quick path. This track runs the same commands one at a time. Each page says what the step does. Open Why? for the longer note.
 
 1. [Prerequisites](hand/01-prerequisites.md)
 2. [Arm A cluster](hand/02-arm-a-cluster.md)

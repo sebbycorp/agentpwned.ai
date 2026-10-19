@@ -9,6 +9,12 @@ plane: none
 
 ![Canary stays outside the actor.](../diagrams/story-06-setup.svg)
 
+<p class="because"><b>What this does.</b> Delete Arm A, then run Substrate's kind script with no extra flags. <b>Why it matters.</b> That script creates the cluster named <code>kind</code> and a registry on <code>127.0.0.1:5001</code>, which is where Arm B pushes images. Substrate v0.5.0 is pre-1.0, and this lab pins tag v0.5.0, commit <code>e8d40c33</code>.</p>
+<details class="why">
+<summary>Why?</summary>
+<p><code>arm-b-up.sh</code> deletes <code>lab01-bare</code> first so one machine is not running both clusters. The clone is skipped when <code>~/.cache/agentpwned/substrate</code> already has a <code>.git</code> directory. Substrate's kind config uses kube-proxy iptables mode. The same nftables branch as Arm A switches it when the statistic match is missing. That switch is a kernel workaround, not a Substrate feature.</p>
+</details>
+
 `arm-b-up.sh` deletes `lab01-bare` so this machine has room for Substrate.
 
 ```bash

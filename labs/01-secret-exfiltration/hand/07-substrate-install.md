@@ -9,7 +9,13 @@ plane: envoy
 
 ![Envoy injects the key and blocks the sink.](../diagrams/story-06-envoy.svg)
 
-Build and push the actor image to the kind registry. Keep the digest line. The actor template needs `localhost:5001/lab01-agent@` plus that digest.
+<p class="because"><b>What this does.</b> Push the lab image, then run the two install commands the script uses, with no dataplane flag, so v0.5.0 stays on Envoy. <b>Why it matters.</b> The egress gateway is the proxy on the actor's way out, and the actor will not hold the canary. The <code>k8s.io</code> provider is what reads the Secret later, when the gateway replaces a header.</p>
+<details class="why">
+<summary>Why?</summary>
+<p><code>--deploy-ate-system</code> installs the control plane and the egress gateway. <code>--credential-provider='{"name":"k8s.io"}'</code> selects the Kubernetes Secret provider. <code>--deploy-demo-egress</code> publishes the worker image and a WorkerPool labeled <code>workload=egress</code>. The lab then sets that pool to one replica. <code>kubectl-ate</code> is the client that creates actors. The hostPort loop runs only when the iptables multiport match is missing. This hand run removed hostPort 8085. Substrate dials the atelet pod IP. These flags are from the v0.5.0 scripts. Substrate v0.5.0 is pre-1.0.</p>
+</details>
+
+Build and push the actor image to the kind registry. Keep the digest line. The actor template needs `localhost:5001/lab01-agent@` plus that digest. The digest pins the bytes you pushed. A tag can move.
 
 ```bash
 export SUBSTRATE_SRC="${SUBSTRATE_SRC:-${HOME}/.cache/agentpwned/substrate}"

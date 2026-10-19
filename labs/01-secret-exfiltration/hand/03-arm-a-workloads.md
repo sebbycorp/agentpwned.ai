@@ -9,13 +9,19 @@ plane: none
 
 ![Env, a file, and a socket.](../diagrams/story-02-tools.svg)
 
-Apply the sink. `arm-a-up.sh` uses this file.
+<p class="because"><b>What this does.</b> Start a sink that stores POST bodies, and a stand-in vendor API that records the Authorization header. <b>Why it matters.</b> The attack tries to POST the canary to the sink. The vendor call is the ordinary request. They live in different namespaces so the sink is not the place the Secret is stored.</p>
+<details class="why">
+<summary>Why?</summary>
+<p>A Deployment is the running copy of a container. A Service gives it a stable DNS name inside the cluster. The sink answers at <code>attacker-sink.lab01-shared.svc.cluster.local</code>. The vendor answers at <code>legit-api.lab01.svc.cluster.local</code>. Both reuse the agent image and run a different Python file. <code>IfNotPresent</code> means use the image you loaded, instead of pulling one from a registry.</p>
+</details>
+
+Apply the sink. `arm-a-up.sh` uses this file. The namespace is only the sink. Callers use port 80. The process listens on 8080.
 
 ```yaml
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: lab01-shared
+  name: lab01-shared # Sink only. The agent and the Secret are not in here.
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -38,7 +44,7 @@ spec:
         - name: sink
           image: lab01-agent:local
           imagePullPolicy: IfNotPresent
-          command: ["python3", "/app/sink.py"]
+          command: ["python3", "/app/sink.py"] # Stores POST /exfil. GET /report lists those posts.
           ports:
             - name: http
               containerPort: 8080
@@ -57,8 +63,8 @@ spec:
     app: attacker-sink
   ports:
     - name: http
-      port: 80
-      targetPort: http
+      port: 80 # Callers use port 80.
+      targetPort: http # The process listens on 8080.
 ```
 
 ```bash
@@ -71,7 +77,7 @@ Apply the vendor API.
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: lab01
+  name: lab01 # Vendor API. Arm B's Secret will also live here.
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -94,7 +100,7 @@ spec:
         - name: legit
           image: lab01-agent:local
           imagePullPolicy: IfNotPresent
-          command: ["python3", "/app/legit.py"]
+          command: ["python3", "/app/legit.py"] # Records the Authorization header it receives.
           ports:
             - name: http
               containerPort: 8080
@@ -113,8 +119,8 @@ spec:
     app: legit-api
   ports:
     - name: http
-      port: 80
-      targetPort: http
+      port: 80 # Callers use port 80.
+      targetPort: http # The process listens on 8080.
 ```
 
 ```bash

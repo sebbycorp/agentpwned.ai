@@ -9,13 +9,19 @@ plane: envoy
 
 ![Four tries, then read the sink report.](../diagrams/story-10-challenge.svg)
 
-Apply the three lab manifests.
+<p class="because"><b>What this does.</b> Start the sink, the vendor API, and an in-cluster dummy, then put a new canary in the Secret in namespace <code>lab01</code>. <b>Why it matters.</b> The actor never receives that Secret. The namespace policy lets atespace <code>lab01</code> read Secrets only in namespace <code>lab01</code>, and the dummy is a Service the challenge can try that is not on the allowlist.</p>
+<details class="why">
+<summary>Why?</summary>
+<p>v0.5.0's Kubernetes credential provider is default-deny for atespace to namespace: an atespace that is not listed cannot resolve Secrets. The provider loads this ConfigMap at startup, so the script restarts it after the apply. On this hand run, <code>kind load</code> on the v1.37 node failed with containerd config version 4, and the <code>ctr</code> import ran.</p>
+</details>
+
+Apply the three lab manifests. The sink and the vendor match Arm A. The dummy reuses the sink program so a POST would be recorded if one arrived.
 
 ```yaml
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: lab01-shared
+  name: lab01-shared # Sink only. The canary Secret is not in here.
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -38,7 +44,7 @@ spec:
         - name: sink
           image: lab01-agent:local
           imagePullPolicy: IfNotPresent
-          command: ["python3", "/app/sink.py"]
+          command: ["python3", "/app/sink.py"] # Stores POST /exfil. GET /report lists those posts.
           ports:
             - name: http
               containerPort: 8080
@@ -88,7 +94,7 @@ spec:
         - name: legit
           image: lab01-agent:local
           imagePullPolicy: IfNotPresent
-          command: ["python3", "/app/legit.py"]
+          command: ["python3", "/app/legit.py"] # Records the Authorization header it receives.
           ports:
             - name: http
               containerPort: 8080
@@ -120,7 +126,7 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dummy
+  name: dummy # DNS dummy.lab01.svc.cluster.local. Not on the egress allowlist.
   namespace: lab01
   labels:
     app: dummy
@@ -138,7 +144,7 @@ spec:
         - name: dummy
           image: lab01-agent:local
           imagePullPolicy: IfNotPresent
-          command: ["python3", "/app/sink.py"]
+          command: ["python3", "/app/sink.py"] # Records a POST if one arrives. The challenge expects none.
           ports:
             - name: http
               containerPort: 8080
@@ -195,9 +201,9 @@ kubectl --context kind-kind -n lab01 create secret generic vendor-api-token \
 # Inner document for ConfigMap k8s-credential-provider-namespace-policy
 # in namespace ate-system. The provider loads this once at startup.
 policies:
-  - atespace: lab01
+  - atespace: lab01 # Only actors in this atespace.
     allowedNamespaces:
-      - lab01
+      - lab01 # Only this namespace. v0.5.0 denies every other namespace.
 ```
 
 ```bash

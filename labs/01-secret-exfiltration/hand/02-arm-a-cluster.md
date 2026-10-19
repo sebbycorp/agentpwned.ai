@@ -9,6 +9,12 @@ plane: none
 
 ![Canary inside the agent.](../diagrams/story-03-hold.svg)
 
+<p class="because"><b>What this does.</b> Build the agent image, start a kind cluster named <code>lab01-bare</code>, and copy the image onto that node. <b>Why it matters.</b> Later pods use <code>lab01-agent:local</code> from the node, not from the internet. <code>kubeProxyMode: nftables</code> is a kind setting: this kernel rejects the iptables statistic match, and then Service IPs and in-cluster DNS do not work.</p>
+<details class="why">
+<summary>Why?</summary>
+<p>A kind cluster is one Kubernetes control plane inside a container. Arm A is the cluster that will hold the canary inside the agent. <code>kind load</code> copies the image into the node. If that fails, the script imports it with <code>ctr</code> and retags it to <code>docker.io/library/lab01-agent:local</code>, the name the Deployments pull. On this hand run, kind load succeeded on the v1.32.2 node.</p>
+</details>
+
 Build the agent image. `arm-a-up.sh` tags it `lab01-agent:local`.
 
 ```bash
@@ -26,7 +32,7 @@ Create the cluster when `kind get clusters` does not already list `lab01-bare`. 
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 networking:
-  kubeProxyMode: nftables
+  kubeProxyMode: nftables # How pods reach Service IPs. iptables mode fails on this kernel.
 nodes:
   - role: control-plane
 ```
