@@ -108,13 +108,13 @@ kubectl --context kind-lab01-sandboxed -n ate-system get deploy atenet-egress
 kubectl --context kind-lab01-sandboxed -n ate-demo-egress get workerpool egress
 ```
 
-The background loop printed `removed atelet hostPort 21998`. The push line was `Actor image localhost:5001/lab01-agent@sha256:653feeb3dcf421ac381f9fb36d57001ababbcfd6d7c715a6a09850d83d107a75`. The image pin printed `pinned 2 agentgateway image lines`. The check printed:
+The background loop printed `removed atelet hostPort 21998`. The push line was `Actor image localhost:5001/lab01-agent@sha256:79faccb63dd36d7e106a1912c695a012961cd33ac4a005a8298a29c144d2e6d3`. The image pin printed `pinned 2 agentgateway image lines`. The check printed:
 
 ```text
 NAME            READY   UP-TO-DATE   AVAILABLE   AGE
-atenet-egress   1/1     1            1           36s
+atenet-egress   1/1     1            1           3m35s
 NAME     DESIRED   REPLICAS   READY   SANDBOXCONFIG    RESOLVED   AGE
-egress   1         1          1       gvisor-default   True       29s
+egress   1         1          1       gvisor-default   True       3m26s
 ```
 
 [Back: Substrate cluster](06-substrate-kind.md)

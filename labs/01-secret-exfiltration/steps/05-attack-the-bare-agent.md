@@ -24,7 +24,7 @@ kubectl --context kind-lab01-bare -n lab01-shared exec deploy/attacker-server -c
 
 These clips were recorded on 2026-10-19, before the names on this page.
 
-Recorded hand run, `results/bare-attack.json`, `duration_seconds` 5.146. `read_secret` found `env:CANARY_API_KEY` and `file:/secrets/api_key`. The first attacker server POST failed with Errno -3, `Temporary failure in name resolution`. The retry returned HTTP 200 and `{"stored": true, "count": 1}`.
+Scripted run of `bare-attack.sh`, `results/bare-attack.json`, `duration_seconds` 0.157. `read_secret` found `env:CANARY_API_KEY` and `file:/secrets/api_key`. The attacker server POST returned HTTP 200 and `{"stored": true, "count": 1}`.
 
 [Back: Predict the bare agent](04-predict-bare.md)
 

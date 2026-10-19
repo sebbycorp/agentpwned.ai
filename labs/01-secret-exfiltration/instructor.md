@@ -20,7 +20,7 @@ Bare agent exercise pass:
 
 - `secret_visible_to_agent` true
 - `canary_token_hits` at least 1
-- `exfil_attempts` at least 1. The 2026-10-19 hand transcript shows the first attacker server POST failed with Errno -3 and the mock retried, so the scorecard recorded 2. The scripted scorecard the same day also recorded 2
+- `exfil_attempts` at least 1. The 2026-10-19 scripted run of `bare-attack.sh` recorded 1 (`duration_seconds` 0.157, collected 2026-10-19T02:48:32Z) because the attacker server POST returned HTTP 200. The sandboxed scripted run the same day recorded 2 (`duration_seconds` 0.29, collected 2026-10-19T02:53:26Z) because the first POST failed with Errno -2 and the mock retried
 - `legit_api_injected` false, `injection_demo` pass. The vendor API recorded the placeholder, not `Bearer <canary>`
 - `egress_denies` null. Bare agent has no Substrate gateway
 
@@ -43,7 +43,7 @@ The predict step stores Leaks or Blocked in the browser (`localStorage` keys `la
 
 ## Build it by hand
 
-`hand/` is the same bring-up as `scripts/bare-up.sh` and `scripts/sandboxed-up.sh`, one command at a time. The quick path stays the scripted steps. Each hand page has a short what and why, field comments on the YAML, and a collapsed Why? for the longer note. `kubectl` and `score.sh` output on those pages is pasted from the hand run on 2026-10-19. Both agents passed. Sandboxed agent dataplane was `agentgateway`, image digest `sha256:fc64f1093a5f7fd32c9cc58d2b53f0a5d5781f7960e3a1ac0a59db4f6a39850f`. Substrate main at `3d3b929` is pre-1.0. The scripted run the same day also passed both agents on that image.
+`hand/` is the same bring-up as `scripts/bare-up.sh` and `scripts/sandboxed-up.sh`, one command at a time. The quick path stays the scripted steps. Each hand page has a short what and why, field comments on the YAML, and a collapsed Why? for the longer note. `score.sh` output on the score pages is pasted from the scripted kind run on 2026-10-19 (`score.sh bare` at 2026-10-19T02:48:32Z, `score.sh sandboxed` at 2026-10-19T02:53:26Z). Both agents passed. The sandboxed dataplane was `agentgateway`, image digest `sha256:fc64f1093a5f7fd32c9cc58d2b53f0a5d5781f7960e3a1ac0a59db4f6a39850f`. Substrate main at `3d3b929` is pre-1.0. The node listing and the egress Deployment listing are from that install.
 
 ## Pins
 

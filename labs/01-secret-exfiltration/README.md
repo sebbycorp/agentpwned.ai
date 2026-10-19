@@ -31,7 +31,7 @@ Start at [Step 1: The agent](steps/01-why-this-lab.md).
 13. [The difference](steps/13-score-the-difference.md)
 14. [Tear down](steps/14-cleanup-and-recap.md)
 
-Instructor notes: [instructor.md](instructor.md).
+Instructor notes: [instructor.md](https://github.com/sebbycorp/agentpwned.ai/blob/main/labs/01-secret-exfiltration/instructor.md).
 
 ## Build it by hand
 
