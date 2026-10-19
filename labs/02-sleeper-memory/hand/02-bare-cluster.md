@@ -16,9 +16,12 @@ plane: none
 </details>
 
 ```bash
+kind version
 kind create cluster --name lab02-bare --config labs/02-sleeper-memory/k8s/kind-bare.yaml
 kubectl cluster-info --context kind-lab02-bare
 ```
+
+`kind version` has to be 0.31 or newer before `kind create`. The config pins `kindest/node` v1.37.0.
 
 [Back: Prerequisites](01-prerequisites.md)
 

@@ -18,6 +18,8 @@ labs/02-sleeper-memory/scripts/score.sh compare \
   labs/02-sleeper-memory/results/recovered.json
 ```
 
+<video class="clip" controls preload="metadata" poster="/labs/02-sleeper-memory/scorecard.png" src="/labs/02-sleeper-memory/scorecard.mp4"></video>
+
 Bare pass at 2026-10-19T11:52:04Z: the vendor canary was visible, the callback survived the new pod, session 2 hit the attacker server once, HTTP 200.
 
 Sandboxed pass at 2026-10-19T11:37:56Z: poison still in memory after resume, `boot_id` `5145fe71` continued, session 2 tried the callback, the attacker server has zero copies of that canary, `egress_denies` 1, the vendor canary was injected only on the legit hop.

@@ -10,6 +10,20 @@ A support ticket hides a standing callback. The agent writes it into its own mem
 
 Agent Substrate is pre-1.0. This lab pins unreleased main `3d3b92921bd68931c509e1b5bd57df00e76ffff0` and agentgateway `cr.agentgateway.dev/agentgateway@sha256:fc64f1093a5f7fd32c9cc58d2b53f0a5d5781f7960e3a1ac0a59db4f6a39850f` (revision `955d56f`). Snapshot and tag behavior can still change.
 
+## Host
+
+kind 0.31 or newer. `bare-up.sh` exits on older kind. kind 0.29 writes kubeadm `v1beta3` and cannot init the pinned node.
+
+`k8s/kind-bare.yaml` pins `kindest/node` v1.37.0 (`sha256:a1ed56cfb0e7b93589bdf97c8cd566405a265939e3620fc4f5de89adff580ae5`). kind 0.29's default node is v1.33.1. On kernel 6.12.94+ that kube-proxy nftables build exits with `too many open files`, and the node stays NotReady.
+
+Two kind clusters share the host's `fs.inotify.max_user_instances` counter. The default is 128. kube-proxy then logs `fsnotify watcher init: too many open files` and exits. Raise it before the second cluster:
+
+```bash
+sudo sysctl -w fs.inotify.max_user_instances=1024
+```
+
+That sysctl is the host kernel, not a Substrate setting.
+
 Start at [Step 1: Two layers](steps/01-why-this-lab.md).
 
 ## Steps

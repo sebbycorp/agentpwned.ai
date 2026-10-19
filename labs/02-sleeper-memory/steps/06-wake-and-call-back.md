@@ -18,6 +18,10 @@ labs/02-sleeper-memory/scripts/bare-attack.sh session2
 
 ![Bare callback lands.](../diagrams/story-05-session2-bare.svg)
 
+<video class="clip" controls preload="metadata" poster="/labs/02-sleeper-memory/bare-leak.png" src="/labs/02-sleeper-memory/bare-leak.mp4"></video>
+
+Scripted run of `bare-attack.sh session2`, `results/bare-session2.json`, `duration_seconds` 0.145. The attacker server POST returned HTTP 200 and `{"stored": true, "count": 1}`.
+
 [Back: Plant the memory](05-poison-the-memory.md)
 
 [Next: What just happened](07-what-just-happened.md)

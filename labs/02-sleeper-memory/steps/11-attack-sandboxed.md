@@ -17,6 +17,10 @@ labs/02-sleeper-memory/scripts/sandboxed-attack.sh all
 
 On this pin the sandbox DNS relay answers NXDOMAIN for a name that is not on the policy, so a lookup never opens a socket. `LAB_DIAL_MAP` is the attacker server Service ClusterIP. The actor dials that address and keeps the HTTP Host as the Service name. That name is not an allow rule. agentgateway default-denies it.
 
+<video class="clip" controls preload="metadata" poster="/labs/02-sleeper-memory/sandboxed-block.png" src="/labs/02-sleeper-memory/sandboxed-block.mp4"></video>
+
+Scripted run, `results/sandboxed-session2.json`, `duration_seconds` 0.307. The attacker server POST returned HTTP 403, body `actor egress policy denied destination`, `dial_ip` `10.96.241.181`.
+
 [Back: Predict the sandboxed agent](10-predict-sandbox.md)
 
 [Next: Where it stopped](12-where-it-stopped.md)

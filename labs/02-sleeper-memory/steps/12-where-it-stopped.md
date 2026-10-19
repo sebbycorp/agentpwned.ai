@@ -9,13 +9,19 @@ reveal: sandbox
 answer: blocked
 ---
 
-![Gateway denies the callback. The legit hop stays allowed.](../diagrams/story-06-session2-sandboxed.svg)
-
 ```bash
 kubectl --context kind-lab02-sandboxed -n ate-system logs deploy/atenet-egress -c agentgateway --tail=400
 ```
 
 <div class="replay-stage">
+![Gateway denies the callback. The legit hop stays allowed.](../diagrams/story-06-session2-sandboxed.svg)
+<div class="log"><p>Client result</p><pre>read  hidden
+attacker-server  HTTP 403
+dial_ip  10.96.241.181
+response_body  actor egress policy denied destination
+legit  HTTP 200
+Authorization  placeholder
+duration_seconds  0.307</pre></div>
 <div class="log"><p>agentgateway deny line</p><pre>2026-10-19T11:37:56.176984Z	error	request request.id=2 gateway=default/default listener=listener1 route=default/route1 src.addr=10.244.0.26:54788 http.method=POST http.host=attacker-server.lab02-shared.svc.cluster.local http.path=/exfil http.version=HTTP/1.1 http.status=403 protocol=http ate.actor.name=assistant-1 ate.actor.uid=8cd94ef4-e2dc-4993-a17e-d445712abdc1 ate.atespace=lab02 error="actor egress policy denied destination" reason=Authorization duration=2ms
 egress_denies 1
 collected_at 2026-10-19T11:37:56Z</pre></div>

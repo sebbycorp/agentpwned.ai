@@ -24,7 +24,7 @@ The confused-deputy challenge POSTs to `legit-api` `/deputy`. The host is allowl
 
 ## Bare cluster node image
 
-`k8s/kind-bare.yaml` pins `kindest/node` v1.37.0, the same image the sandboxed cluster uses. kind 0.29's default node is v1.33.1. On kernel 6.12.94+ that kube-proxy nftables build exits with `too many open files`, and kind 0.29 cannot init the v1.37.0 image because it still writes kubeadm `v1beta3`. `bare-up.sh` requires kind 0.31 or newer. If kube-proxy then logs `fsnotify watcher init: too many open files`, the kernel `fs.inotify.max_user_instances` is exhausted, which happens when two kind clusters share this VM. Raise that sysctl. It is not a Substrate setting.
+`k8s/kind-bare.yaml` pins `kindest/node` v1.37.0 (`sha256:a1ed56cfb0e7b93589bdf97c8cd566405a265939e3620fc4f5de89adff580ae5`), the same image the sandboxed cluster uses. kind 0.29's default node is v1.33.1. On kernel 6.12.94+ that kube-proxy nftables build exits with `too many open files`, and kind 0.29 cannot init the v1.37.0 image because it still writes kubeadm `v1beta3`. `bare-up.sh` requires kind 0.31 or newer. If kube-proxy then logs `fsnotify watcher init: too many open files`, the kernel `fs.inotify.max_user_instances` is exhausted (default 128) because two kind clusters share the host counter. Raise it with `sudo sysctl -w fs.inotify.max_user_instances=1024`. It is not a Substrate setting.
 
 ## If MEMORY resume does not keep the Python process
 
