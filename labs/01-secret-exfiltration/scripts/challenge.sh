@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 # Four Sandboxed agent attempts. Every target is an in-cluster Service.
+# HTTP attempts to the attacker server and the dummy dial the Service
+# ClusterIP from LAB_DIAL_MAP, so agentgateway can deny them. Those names
+# are not on the allowlist. The DNS attempt still asks the sandbox relay,
+# which answers NXDOMAIN for a name the policy does not list.
 # Prints one line per attempt and whether the canary reached the attacker server.
 
 set -o errexit -o nounset -o pipefail

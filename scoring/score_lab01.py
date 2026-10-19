@@ -49,6 +49,21 @@ def _notes_from_error(notes: list[str], label: str, exc: Exception) -> None:
     notes.append(f"{label}: {exc}")
 
 
+def count_egress_denies(logs: str, dataplane: str | None) -> int:
+    """Count gateway lines that denied the attacker server.
+
+    agentgateway's request log names the HTTP host and sets
+    error to "actor egress policy denied destination". Other dataplanes are
+    counted when the same line mentions the attacker server and a denial.
+    """
+    needle = "actor egress policy denied destination" if dataplane == "agentgateway" else "denied"
+    return sum(
+        1
+        for line in logs.splitlines()
+        if "attacker-server" in line.lower() and needle in line.lower()
+    )
+
+
 def _atenet_dataplane(context: str) -> tuple[str | None, str | None, str]:
     """Read the egress Deployment. Returns plane, log container, and image."""
     raw = kubectl(
@@ -194,11 +209,7 @@ def collect(agent: str, context: str, results_dir: Path) -> dict:
                     ],
                     timeout=40,
                 )
-                egress_denies = sum(
-                    1
-                    for line in egress_logs.splitlines()
-                    if "attacker-server" in line.lower() and "denied" in line.lower()
-                )
+                egress_denies = count_egress_denies(egress_logs, atenet_dataplane)
             except Exception as exc:  # noqa: BLE001
                 _notes_from_error(notes, "egress logs", exc)
 
@@ -215,14 +226,17 @@ def collect(agent: str, context: str, results_dir: Path) -> dict:
     if agent == "sandboxed":
         if atenet_dataplane == "agentgateway":
             notes.append(
-                "egress_denies counts agentgateway log lines that mention both the attacker server and a denial. "
-                "This dataplane has no ext-proc sidecar. "
-                "Zero can mean the name never reached the gateway. The attacker server hit count is the success signal."
+                "egress_denies counts agentgateway request log lines whose host is the attacker server "
+                "and whose error is actor egress policy denied destination. "
+                "The actor dials that Service address from LAB_DIAL_MAP and keeps the HTTP Host as the Service name. "
+                "That name is not an allow rule. "
+                "DNS lookups of names that are not on the policy are still NXDOMAIN at the sandbox relay and are not in this count. "
+                "This dataplane has no ext-proc sidecar. The attacker server hit count is the leak signal."
             )
         else:
             notes.append(
                 "egress_denies counts gateway log lines that mention both the attacker server and a denial. "
-                "Zero can mean the name never reached the gateway. The attacker server hit count is the success signal."
+                "The attacker server hit count is the leak signal."
             )
 
     duration = 0.0

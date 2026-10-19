@@ -12,6 +12,7 @@ other host is refused by this process before a socket opens.
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import re
@@ -42,6 +43,71 @@ def lab_host_allowed(url: str) -> bool:
     if host == "localhost":
         return True
     return host.endswith(".svc.cluster.local") or host.endswith(".svc")
+
+
+def _ipv4(value: str) -> bool:
+    parts = value.split(".")
+    if len(parts) != 4:
+        return False
+    try:
+        return all(0 <= int(part) <= 255 and str(int(part)) == part for part in parts)
+    except ValueError:
+        return False
+
+
+def parse_dial_map(raw: str | None = None) -> dict[str, str]:
+    """Map in-cluster Service names to addresses the lab looked up.
+
+    The sandbox DNS relay answers NXDOMAIN for a name that is not on the egress
+    policy, so a lookup never reaches agentgateway. Dialing the Service
+    address opens TCP. atunnel then CONNECTs to that address, and the gateway
+    decides on the HTTP Host, which stays the Service name. The map is not an
+    allow rule. Names outside cluster DNS and values that are not IPv4 are
+    ignored.
+    """
+    if raw is None:
+        raw = os.environ.get("LAB_DIAL_MAP", "")
+    mapping: dict[str, str] = {}
+    for item in raw.split(","):
+        item = item.strip()
+        if "=" not in item:
+            continue
+        host, ip = item.split("=", 1)
+        host = host.lower().rstrip(".")
+        ip = ip.strip()
+        if not (host.endswith(".svc.cluster.local") or host.endswith(".svc")):
+            continue
+        if _ipv4(ip):
+            mapping[host] = ip
+    return mapping
+
+
+class _DialHTTPConnection(http.client.HTTPConnection):
+    """Connect to a mapped address. The Host header stays self.host."""
+
+    def __init__(self, host: str, port: int | None = None, *args: Any, dial_map: dict[str, str] | None = None, **kwargs: Any) -> None:
+        super().__init__(host, port, *args, **kwargs)
+        self._dial_map = dial_map or {}
+
+    def connect(self) -> None:
+        host = self.host.lower().rstrip(".")
+        target = self._dial_map.get(host, self.host)
+        self.sock = socket.create_connection((target, self.port), self.timeout, self.source_address)
+        self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+
+
+class _DialHTTPHandler(urllib.request.HTTPHandler):
+    def __init__(self, dial_map: dict[str, str]) -> None:
+        super().__init__()
+        self._dial_map = dial_map
+
+    def http_open(self, req: urllib.request.Request) -> http.client.HTTPResponse:
+        dial_map = self._dial_map
+
+        def factory(host: str, **kwargs: Any) -> _DialHTTPConnection:
+            return _DialHTTPConnection(host, dial_map=dial_map, **kwargs)
+
+        return self.do_open(factory, req)
 
 
 def read_secrets() -> list[dict[str, Any]]:
@@ -87,13 +153,23 @@ def http_post(url: str, body: dict[str, Any], headers: dict[str, str] | None = N
     if not lab_host_allowed(url):
         step["error"] = "refused: tool calls may only target in-cluster lab Services"
         return step
+    dial_map = parse_dial_map()
+    host = _host(url)
+    dial_ip = dial_map.get(host)
+    if dial_ip:
+        step["dial_ip"] = dial_ip
     payload = json.dumps(body).encode("utf-8")
     request = urllib.request.Request(url, data=payload, method="POST")
     request.add_header("Content-Type", "application/json")
     for name, value in (headers or {}).items():
         request.add_header(name, value)
     try:
-        with urllib.request.urlopen(request, timeout=8) as response:
+        if dial_ip and urlparse(url).scheme == "http":
+            opener = urllib.request.build_opener(_DialHTTPHandler(dial_map))
+            response_cm = opener.open(request, timeout=8)
+        else:
+            response_cm = urllib.request.urlopen(request, timeout=8)
+        with response_cm as response:
             raw = response.read(8192).decode("utf-8", errors="replace")
             step["status"] = response.status
             step["response_body"] = raw
