@@ -4,7 +4,7 @@
  *
  * Black board. Outline boxes. Caveat labels are filled glyphs.
  * Neon green is an allowed hop. Red is a leak or a block.
- * Arm B on these frames is agentgateway.
+ * Sandboxed agent on these frames is agentgateway.
  *
  *   node labs/01-secret-exfiltration/diagrams/story.mjs
  */
@@ -46,7 +46,7 @@ function hold() {
 		box(120, 230, 280, 160, GREEN),
 		chalk('canary', 260, 325, 58, GREEN),
 		box(560, 180, 340, 180, INK),
-		chalk('sink', 730, 270, 54, INK),
+		chalk('attacker server', 730, 270, 54, INK),
 		chalk('not yet', 730, 318, 28, INK),
 	].join('');
 }
@@ -55,7 +55,7 @@ function predictBare() {
 	return [
 		chalk('leaks or blocked', 480, 72, 40, INK),
 		card(50, 160, 320, 220, 'agent', 'holds canary', INK),
-		card(560, 180, 340, 180, 'sink', '?', INK),
+		card(560, 180, 340, 180, 'attacker server', '?', INK),
 		arrow(370, 270, 560, 270, INK),
 	].join('');
 }
@@ -64,7 +64,7 @@ function exfil(caption) {
 	return [
 		caption ? chalk(caption, 480, 64, 40, RED) : '',
 		card(40, 150, 300, 240, 'agent', 'holds canary', INK),
-		card(560, 170, 360, 200, 'sink', 'HTTP 200', RED),
+		card(560, 170, 360, 200, 'attacker server', 'HTTP 200', RED),
 		arrow(340, 270, 560, 270, RED),
 		chalk('leaked', 450, 250, 36, RED),
 		legend(),
@@ -90,7 +90,7 @@ function gateway() {
 		card(36, 200, 250, 220, 'actor', 'no canary', INK),
 		card(310, 175, 280, 220, 'agentgateway', '', INK, 32),
 		card(640, 36, 284, 160, 'legit API', 'HTTP 200', GREEN),
-		card(640, 340, 284, 150, 'sink', 'blocked', RED),
+		card(640, 340, 284, 150, 'attacker server', 'blocked', RED, 26),
 		arrow(286, 290, 310, 280, INK),
 		arrow(590, 230, 640, 130, GREEN),
 		chalk('injected', 560, 150, 28, GREEN),
@@ -134,7 +134,7 @@ function predictSandbox() {
 		card(40, 180, 240, 170, 'actor', 'no canary', INK),
 		card(310, 180, 270, 170, 'agentgateway', 'allowlist', INK, 28),
 		card(660, 100, 260, 140, 'legit', '?', INK),
-		card(660, 310, 260, 140, 'sink', '?', INK),
+		card(660, 310, 260, 140, 'attacker server', '?', INK, 32),
 		arrow(280, 265, 310, 265, INK),
 		arrow(580, 230, 660, 170, INK),
 		arrow(580, 300, 660, 360, INK),
@@ -145,10 +145,10 @@ function challenge() {
 	return [
 		chalk('four tries', 480, 64, 40, INK),
 		card(36, 110, 210, 150, 'read', 'env file', INK),
-		card(262, 110, 210, 150, 'sink', 'POST', INK),
+		card(262, 110, 210, 150, 'attacker server', 'POST', INK, 22),
 		card(488, 110, 210, 150, 'dummy', 'unlisted', INK),
 		card(714, 110, 210, 150, 'dns', 'lookup', INK),
-		card(250, 320, 460, 150, 'sink', 'read the report', RED),
+		card(250, 320, 460, 150, 'attacker server', 'read the report', RED),
 	].join('');
 }
 
@@ -159,7 +159,7 @@ function compare() {
 		chalk('agent', 230, 145, 44, INK),
 		chalk('holds canary', 230, 185, 24, INK),
 		box(40, 310, 380, 140, RED),
-		chalk('sink', 230, 375, 44, RED),
+		chalk('attacker server', 230, 375, 44, RED),
 		chalk('HTTP 200', 230, 415, 24, RED),
 		arrow(230, 220, 230, 310, RED),
 		chalk('leaked', 310, 275, 28, RED),
@@ -168,14 +168,14 @@ function compare() {
 		chalk('agentgateway', 730, 48, 26, INK),
 		box(540, 80, 180, 110, INK),
 		chalk('actor', 630, 148, 32, INK),
-		box(760, 80, 160, 110, GREEN),
-		chalk('legit', 840, 132, 28, GREEN),
-		chalk('HTTP 200', 840, 162, 18, GREEN),
+		box(760, 80, 188, 110, GREEN),
+		chalk('legit', 854, 132, 28, GREEN),
+		chalk('HTTP 200', 854, 162, 18, GREEN),
 		box(540, 270, 180, 130, INK),
 		chalk('agentgateway', 630, 350, 22, INK),
-		box(760, 330, 160, 120, RED),
-		chalk('sink', 840, 385, 28, RED),
-		chalk('blocked', 840, 418, 20, RED),
+		box(760, 330, 188, 120, RED),
+		chalk('attacker server', 854, 385, 26, RED),
+		chalk('blocked', 854, 418, 20, RED),
 		arrow(720, 135, 760, 135, GREEN),
 		arrow(630, 190, 630, 270, INK),
 		arrow(720, 340, 760, 380, RED),
@@ -187,14 +187,14 @@ const frames = [
 	['story-01-agent.svg', 'Agent', agent()],
 	['story-02-tools.svg', 'Tools on the machine', tools()],
 	['story-03-hold.svg', 'Canary inside the agent', hold()],
-	['story-predict-bare.svg', 'Will the canary reach the sink?', predictBare()],
-	['story-04-exfil.svg', 'Canary reaches the sink', exfil('')],
-	['story-05-score-a.svg', 'Arm A score still shows the leak', exfil('1 hit')],
+	['story-predict-bare.svg', 'Will the canary reach the attacker server?', predictBare()],
+	['story-04-exfil.svg', 'Canary reaches the attacker server', exfil('')],
+	['story-05-score-a.svg', 'Bare agent score still shows the leak', exfil('1 hit')],
 	['story-06-setup.svg', 'Canary stays outside the actor', setup()],
-	['story-06-gateway.svg', 'agentgateway injects the key and blocks the sink', gateway()],
+	['story-06-gateway.svg', 'agentgateway injects the key and blocks the attacker server', gateway()],
 	['story-09-injection.svg', 'Placeholder, allowlist, replaceHeaders, or denied', injection()],
-	['story-predict-sandbox.svg', 'Will the canary reach the sink?', predictSandbox()],
-	['story-10-challenge.svg', 'Four tries, then read the sink report', challenge()],
+	['story-predict-sandbox.svg', 'Will the canary reach the attacker server?', predictSandbox()],
+	['story-10-challenge.svg', 'Four tries, then read the attacker server report', challenge()],
 	['story-07-compare.svg', 'Bare beside agentgateway', compare()],
 	['story-08-compare.svg', 'Bare beside agentgateway, then both clusters go away', compare()],
 ];

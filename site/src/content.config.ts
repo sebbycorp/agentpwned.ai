@@ -24,7 +24,7 @@ const steps = defineCollection({
 		lab: z.string().min(1),
 		order: z.number().int().positive(),
 		canary: z.string().min(1),
-		sink: z.string().min(1),
+		server: z.string().min(1),
 		legit: z.string().min(1),
 		plane: z.string().min(1),
 		track: z.enum(['scripted', 'hand']).default('scripted'),

@@ -1,5 +1,5 @@
-# Arm A. The canary is mounted into the process. kindnet does not enforce
-# NetworkPolicy, so this pod can dial the in-cluster sink. The agent process
+# Bare agent. The canary is mounted into the process. kindnet does not enforce
+# NetworkPolicy, so this pod can dial the in-cluster attacker server. The agent process
 # still refuses any host outside cluster DNS.
 apiVersion: v1
 kind: Namespace

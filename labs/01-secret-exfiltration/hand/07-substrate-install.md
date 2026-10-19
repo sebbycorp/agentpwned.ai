@@ -2,12 +2,12 @@
 title: Substrate install
 summary: Push the lab image, then run the two hack/install-ate-kind.sh commands the script runs.
 canary: outside the actor
-sink: empty
+server: empty
 legit: not called
 plane: agentgateway
 ---
 
-![agentgateway injects the key and blocks the sink.](../diagrams/story-06-gateway.svg)
+![agentgateway injects the key and blocks the attacker server.](../diagrams/story-06-gateway.svg)
 
 <p class="because"><b>What this does.</b> Push the lab image, pin the agentgateway digest, then run the two install commands with <code>--atenet-dataplane=agentgateway</code>. <b>Why it matters.</b> agentgateway is the proxy on the actor's way out, and the actor will not hold the canary. The <code>k8s.io</code> provider is what reads the Secret later, when the gateway replaces a header.</p>
 <details class="why">
@@ -60,13 +60,13 @@ export PATH="/usr/local/go/bin:${HOME}/.local/bin:${PATH}"
 Kernels without the iptables `multiport` match cannot start atelet while it publishes a hostPort. The script drops that hostPort in the background while the installer applies the DaemonSet. Substrate dials the atelet pod IP.
 
 ```bash
-matches="$(docker exec kind-control-plane cat /proc/net/ip_tables_matches 2>/dev/null || true)"
+matches="$(docker exec lab01-sandboxed-control-plane cat /proc/net/ip_tables_matches 2>/dev/null || true)"
 if ! printf '%s\n' "${matches}" | grep -qx multiport; then
   (
     for _ in $(seq 1 400); do
-      host_port="$(kubectl --context kind-kind -n ate-system get ds atelet -o jsonpath='{.spec.template.spec.containers[0].ports[0].hostPort}' 2>/dev/null || true)"
+      host_port="$(kubectl --context kind-lab01-sandboxed -n ate-system get ds atelet -o jsonpath='{.spec.template.spec.containers[0].ports[0].hostPort}' 2>/dev/null || true)"
       if [[ -n "${host_port}" ]]; then
-        kubectl --context kind-kind -n ate-system patch ds atelet --type json \
+        kubectl --context kind-lab01-sandboxed -n ate-system patch ds atelet --type json \
           -p '[{"op":"remove","path":"/spec/template/spec/containers/0/ports/0/hostPort"}]' >/dev/null
         echo "removed atelet hostPort ${host_port}"
       fi
@@ -76,9 +76,11 @@ if ! printf '%s\n' "${matches}" | grep -qx multiport; then
 fi
 ```
 
-Install the system, then the egress demo. These are the flags `arm-b-up.sh` passes.
+Install the system, then the egress demo. These are the flags `sandboxed-up.sh` passes.
 
 ```bash
+export KIND_CLUSTER_NAME=lab01-sandboxed
+export KUBECTL_CONTEXT=kind-lab01-sandboxed
 (
   cd "${SUBSTRATE_SRC}"
   hack/install-ate-kind.sh \
@@ -95,26 +97,26 @@ Install `kubectl-ate` and shrink the worker pool to one replica.
 ```bash
 mkdir -p "${HOME}/.local/bin"
 ( cd "${SUBSTRATE_SRC}" && GOBIN="${HOME}/.local/bin" go install ./cmd/kubectl-ate )
-kubectl --context kind-kind -n ate-demo-egress patch workerpool egress \
+kubectl --context kind-lab01-sandboxed -n ate-demo-egress patch workerpool egress \
   --type merge -p '{"spec":{"replicas":1}}'
 ```
 
 Check the egress Deployment and the worker pool.
 
 ```bash
-kubectl --context kind-kind -n ate-system get deploy atenet-egress
-kubectl --context kind-kind -n ate-demo-egress get workerpool egress
+kubectl --context kind-lab01-sandboxed -n ate-system get deploy atenet-egress
+kubectl --context kind-lab01-sandboxed -n ate-demo-egress get workerpool egress
 ```
 
-The background loop printed `removed atelet hostPort 21998`. The push line was `Actor image localhost:5001/lab01-agent@sha256:653feeb3dcf421ac381f9fb36d57001ababbcfd6d7c715a6a09850d83d107a75`. The image pin printed `pinned 2 agentgateway image lines`. The check printed:
+The background loop printed `removed atelet hostPort 21998`. The push line was `Actor image localhost:5001/lab01-agent@sha256:79faccb63dd36d7e106a1912c695a012961cd33ac4a005a8298a29c144d2e6d3`. The image pin printed `pinned 2 agentgateway image lines`. The check printed:
 
 ```text
 NAME            READY   UP-TO-DATE   AVAILABLE   AGE
-atenet-egress   1/1     1            1           36s
+atenet-egress   1/1     1            1           3m35s
 NAME     DESIRED   REPLICAS   READY   SANDBOXCONFIG    RESOLVED   AGE
-egress   1         1          1       gvisor-default   True       29s
+egress   1         1          1       gvisor-default   True       3m26s
 ```
 
 [Back: Substrate cluster](06-substrate-kind.md)
 
-[Next: Arm B services](08-arm-b-services.md)
+[Next: Sandboxed agent services](08-sandboxed-services.md)

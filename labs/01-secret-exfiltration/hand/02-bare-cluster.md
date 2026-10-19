@@ -1,8 +1,8 @@
 ---
-title: Arm A cluster
+title: Bare agent cluster
 summary: Build the image, create kind cluster lab01-bare, then load the image.
 canary: not placed
-sink: idle
+server: idle
 legit: idle
 plane: none
 ---
@@ -12,10 +12,10 @@ plane: none
 <p class="because"><b>What this does.</b> Build the agent image, start a kind cluster named <code>lab01-bare</code>, and copy the image onto that node. <b>Why it matters.</b> Later pods use <code>lab01-agent:local</code> from the node, not from the internet. <code>kubeProxyMode: nftables</code> is a kind setting: this kernel rejects the iptables statistic match, and then Service IPs and in-cluster DNS do not work.</p>
 <details class="why">
 <summary>Why?</summary>
-<p>A kind cluster is one Kubernetes control plane inside a container. Arm A is the cluster that will hold the canary inside the agent. <code>kind load</code> copies the image into the node. If that fails, the script imports it with <code>ctr</code> and retags it to <code>docker.io/library/lab01-agent:local</code>, the name the Deployments pull. On this hand run, kind load succeeded on the v1.32.2 node.</p>
+<p>A kind cluster is one Kubernetes control plane inside a container. Bare agent is the cluster that will hold the canary inside the agent. <code>kind load</code> copies the image into the node. If that fails, the script imports it with <code>ctr</code> and retags it to <code>docker.io/library/lab01-agent:local</code>, the name the Deployments pull. On this hand run, kind load succeeded on the v1.32.2 node.</p>
 </details>
 
-Build the agent image. `arm-a-up.sh` tags it `lab01-agent:local`.
+Build the agent image. `bare-up.sh` tags it `lab01-agent:local`.
 
 ```bash
 docker build -t lab01-agent:local labs/01-secret-exfiltration/agent
@@ -24,7 +24,7 @@ docker build -t lab01-agent:local labs/01-secret-exfiltration/agent
 Create the cluster when `kind get clusters` does not already list `lab01-bare`. This is the config the script passes.
 
 ```yaml
-# Arm A kind cluster.
+# Bare agent kind cluster.
 # kubeProxyMode nftables avoids the iptables "statistic" match. Some kernels
 # (including the one this lab was authored on, 6.12.94+) reject that match,
 # and then ClusterIP and in-cluster DNS never work. nftables mode is a kind
@@ -38,7 +38,7 @@ nodes:
 ```
 
 ```bash
-kind create cluster --name lab01-bare --config labs/01-secret-exfiltration/k8s/kind-arm-a.yaml
+kind create cluster --name lab01-bare --config labs/01-secret-exfiltration/k8s/kind-bare.yaml
 ```
 
 If the node has no iptables `statistic` match, switch kube-proxy to nftables. This is the branch `ensure_cluster_services` takes. Skip the patch when the mode is already nftables.
@@ -59,7 +59,7 @@ if ! printf '%s\n' "${matches}" | grep -qx 'statistic'; then
 fi
 ```
 
-Load the image into the cluster. If `kind load` fails, import it with `ctr` and retag it to `docker.io/library/lab01-agent:local`. That is `load_kind_image` in `arm-a-up.sh`.
+Load the image into the cluster. If `kind load` fails, import it with `ctr` and retag it to `docker.io/library/lab01-agent:local`. That is `load_kind_image` in `bare-up.sh`.
 
 ```bash
 if ! kind load docker-image lab01-agent:local --name lab01-bare; then
@@ -86,4 +86,4 @@ mode: nftables
 
 [Back: Prerequisites](01-prerequisites.md)
 
-[Next: Arm A workloads](03-arm-a-workloads.md)
+[Next: Bare agent workloads](03-bare-workloads.md)

@@ -31,7 +31,7 @@ def _cell(value: Any) -> str:
 
 def render_table(result: dict[str, Any]) -> str:
     lines = [
-        f"Lab 01 scorecard  arm={result['arm']}  exercise={'PASS' if result['exercise_pass'] else 'FAIL'}",
+        f"Lab 01 scorecard  agent={result['agent']}  exercise={'PASS' if result['exercise_pass'] else 'FAIL'}",
         f"collected_at={result['collected_at']}  duration_seconds={result['duration_seconds']}",
         "",
         f"{'metric':<28} {'value'}",
@@ -40,12 +40,12 @@ def render_table(result: dict[str, Any]) -> str:
     for name in COLUMNS:
         lines.append(f"{name:<28} {_cell(result.get(name))}")
     lines.append("")
-    lines.append(f"{'criterion':<28} {'expected':<12} {'actual':<12} result")
-    lines.append(f"{'-' * 28} {'-' * 12} {'-' * 12} ------")
+    lines.append(f"{'criterion':<32} {'expected':<12} {'actual':<12} result")
+    lines.append(f"{'-' * 32} {'-' * 12} {'-' * 12} ------")
     for item in result.get("criteria", []):
         verdict = "pass" if item["pass"] else "FAIL"
         lines.append(
-            f"{item['name']:<28} {_cell(item['expected']):<12} {_cell(item['actual']):<12} {verdict}"
+            f"{item['name']:<32} {_cell(item['expected']):<12} {_cell(item['actual']):<12} {verdict}"
         )
     notes = result.get("notes") or []
     if notes:
@@ -57,7 +57,7 @@ def render_table(result: dict[str, Any]) -> str:
 
 
 def render_compare(results: list[dict[str, Any]]) -> str:
-    header = f"{'metric':<28}" + "".join(f"{item['arm']:<16}" for item in results)
+    header = f"{'metric':<28}" + "".join(f"{item['agent']:<16}" for item in results)
     lines = ["Lab 01 comparison", "", header, "-" * len(header)]
     for name in COLUMNS:
         row = f"{name:<28}"
@@ -66,7 +66,7 @@ def render_compare(results: list[dict[str, Any]]) -> str:
         lines.append(row)
     lines.append("")
     both = all(item["exercise_pass"] for item in results) and len(results) >= 2
-    lines.append(f"both arms passed their exercise: {'yes' if both else 'no'}")
+    lines.append(f"both agents passed their exercise: {'yes' if both else 'no'}")
     return "\n".join(lines)
 
 

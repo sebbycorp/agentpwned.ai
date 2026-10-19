@@ -6,6 +6,6 @@ source "$(dirname "$0")/common.sh"
 
 need kind
 need docker
-kind delete cluster --name "${ARM_B_CLUSTER}" || true
+kind delete cluster --name "${SANDBOXED_CLUSTER}" || true
 docker rm -f kind-registry >/dev/null 2>&1 || true
-echo "Arm B cluster ${ARM_B_CLUSTER} deleted."
+echo "Sandboxed agent cluster ${SANDBOXED_CLUSTER} deleted."

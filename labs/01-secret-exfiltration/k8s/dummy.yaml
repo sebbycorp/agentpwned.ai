@@ -24,7 +24,7 @@ spec:
         - name: dummy
           image: lab01-agent:local
           imagePullPolicy: IfNotPresent
-          command: ["python3", "/app/sink.py"]
+          command: ["python3", "/app/attacker_server.py"]
           ports:
             - name: http
               containerPort: 8080

@@ -53,7 +53,7 @@ export function stepsLoader(): Loader {
 						if (!parsed.data.title || !parsed.data.summary) {
 							throw new Error(`${entry.name}/${dirName}/${name} needs title and summary in frontmatter`);
 						}
-						for (const key of ['canary', 'sink', 'legit', 'plane']) {
+						for (const key of ['canary', 'server', 'legit', 'plane']) {
 							if (!parsed.data[key]) {
 								throw new Error(`${entry.name}/${dirName}/${name} needs ${key} in frontmatter`);
 							}
@@ -69,7 +69,7 @@ export function stepsLoader(): Loader {
 								lab: labId,
 								order: Number(name.slice(0, 2)),
 								canary: parsed.data.canary,
-								sink: parsed.data.sink,
+								server: parsed.data.server,
 								legit: parsed.data.legit,
 								plane: parsed.data.plane,
 								track,

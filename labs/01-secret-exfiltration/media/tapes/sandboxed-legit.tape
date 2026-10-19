@@ -1,5 +1,5 @@
-Output ../arm-b-legit.gif
-Output ../arm-b-legit.mp4
+Output ../sandboxed-legit.gif
+Output ../sandboxed-legit.mp4
 
 Set Shell "bash"
 Set FontFamily "JetBrains Mono"
@@ -15,6 +15,6 @@ Type "cd /workspace"
 Enter
 Show
 
-Type "python3 labs/01-secret-exfiltration/media/show.py arm-b-legit"
+Type "python3 labs/01-secret-exfiltration/media/show.py sandboxed-legit"
 Enter
 Sleep 10s

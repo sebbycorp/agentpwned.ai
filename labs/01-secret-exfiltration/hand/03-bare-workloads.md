@@ -1,50 +1,50 @@
 ---
-title: Arm A workloads
-summary: Apply the sink and the vendor API, then the bare namespace.
+title: Bare agent workloads
+summary: Apply the attacker server and the vendor API, then the bare namespace.
 canary: not placed
-sink: empty
+server: empty
 legit: idle
 plane: none
 ---
 
 ![Env, a file, and a socket.](../diagrams/story-02-tools.svg)
 
-<p class="because"><b>What this does.</b> Start a sink that stores POST bodies, and a stand-in vendor API that records the Authorization header. <b>Why it matters.</b> The attack tries to POST the canary to the sink. The vendor call is the ordinary request. They live in different namespaces so the sink is not the place the Secret is stored.</p>
+<p class="because"><b>What this does.</b> Start an attacker server that stores POST bodies, and a stand-in vendor API that records the Authorization header. <b>Why it matters.</b> The attack tries to POST the canary to the attacker server. The vendor call is the ordinary request. They live in different namespaces so the attacker server is not the place the Secret is stored.</p>
 <details class="why">
 <summary>Why?</summary>
-<p>A Deployment is the running copy of a container. A Service gives it a stable DNS name inside the cluster. The sink answers at <code>attacker-sink.lab01-shared.svc.cluster.local</code>. The vendor answers at <code>legit-api.lab01.svc.cluster.local</code>. Both reuse the agent image and run a different Python file. <code>IfNotPresent</code> means use the image you loaded, instead of pulling one from a registry.</p>
+<p>A Deployment is the running copy of a container. A Service gives it a stable DNS name inside the cluster. The attacker server answers at <code>attacker-server.lab01-shared.svc.cluster.local</code>. The vendor answers at <code>legit-api.lab01.svc.cluster.local</code>. Both reuse the agent image and run a different Python file. <code>IfNotPresent</code> means use the image you loaded, instead of pulling one from a registry.</p>
 </details>
 
-Apply the sink. `arm-a-up.sh` uses this file. The namespace is only the sink. Callers use port 80. The process listens on 8080.
+Apply the attacker server. `bare-up.sh` uses this file. The namespace is only the attacker server. Callers use port 80. The process listens on 8080.
 
 ```yaml
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: lab01-shared # Sink only. The agent and the Secret are not in here.
+  name: lab01-shared # Attacker server only. The agent and the Secret are not in here.
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: attacker-sink
+  name: attacker-server
   namespace: lab01-shared
   labels:
-    app: attacker-sink
+    app: attacker-server
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: attacker-sink
+      app: attacker-server
   template:
     metadata:
       labels:
-        app: attacker-sink
+        app: attacker-server
     spec:
       containers:
-        - name: sink
+        - name: attacker-server
           image: lab01-agent:local
           imagePullPolicy: IfNotPresent
-          command: ["python3", "/app/sink.py"] # Stores POST /exfil. GET /report lists those posts.
+          command: ["python3", "/app/attacker_server.py"] # Stores POST /exfil. GET /report lists those posts.
           ports:
             - name: http
               containerPort: 8080
@@ -56,11 +56,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: attacker-sink
+  name: attacker-server
   namespace: lab01-shared
 spec:
   selector:
-    app: attacker-sink
+    app: attacker-server
   ports:
     - name: http
       port: 80 # Callers use port 80.
@@ -68,7 +68,7 @@ spec:
 ```
 
 ```bash
-kubectl --context kind-lab01-bare apply -f labs/01-secret-exfiltration/k8s/sink.yaml
+kubectl --context kind-lab01-bare apply -f labs/01-secret-exfiltration/k8s/attacker-server.yaml
 ```
 
 Apply the vendor API.
@@ -77,7 +77,7 @@ Apply the vendor API.
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: lab01 # Vendor API. Arm B's Secret will also live here.
+  name: lab01 # Vendor API. Sandboxed agent's Secret will also live here.
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -146,9 +146,9 @@ Printed on this run, one second after apply. Ready was still 0. The next page wa
 
 ```text
 NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/attacker-sink   0/1     0            0           1s
+deployment.apps/attacker-server   0/1     0            0           1s
 NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
-service/attacker-sink   ClusterIP   10.96.139.125   <none>        80/TCP    1s
+service/attacker-server   ClusterIP   10.96.139.125   <none>        80/TCP    1s
 NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
 deployment.apps/legit-api   0/1     0            0           1s
 NAME                TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
@@ -157,6 +157,6 @@ NAME         STATUS   AGE
 lab01-bare   Active   0s
 ```
 
-[Back: Arm A cluster](02-arm-a-cluster.md)
+[Back: Bare agent cluster](02-bare-cluster.md)
 
-[Next: Arm A agent](04-arm-a-agent.md)
+[Next: Bare agent](04-bare-agent.md)

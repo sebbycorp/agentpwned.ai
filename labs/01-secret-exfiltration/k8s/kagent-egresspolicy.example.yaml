@@ -1,4 +1,4 @@
-# Arm C illustration. NOT applied by the scored scripts.
+# kagent extension illustration. NOT applied by the scored scripts.
 #
 # Source shape: kagent main 7a0a4fd0 (2026-10-18), ahead of release tag
 # v1.0.0-alpha14. That tag has no EgressPolicy CRD and no egressPolicyRefs

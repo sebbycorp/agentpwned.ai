@@ -50,7 +50,7 @@ def read_json(name: str) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def sink_report(context: str) -> dict:
+def attacker_server_report(context: str) -> dict:
     raw = run(
         [
             "kubectl",
@@ -59,7 +59,7 @@ def sink_report(context: str) -> dict:
             "-n",
             "lab01-shared",
             "exec",
-            "deploy/attacker-sink",
+            "deploy/attacker-server",
             "--",
             "python",
             "-c",
@@ -94,7 +94,7 @@ def posts(transcript: dict) -> list[dict]:
 def scene_setup() -> None:
     say("Lab 01 setup. Live clusters, not a mock.")
     say("")
-    say("Arm A context kind-lab01-bare")
+    say("Bare agent context kind-lab01-bare")
     for namespace in ("lab01-bare", "lab01-shared", "lab01"):
         block(
             run(
@@ -111,12 +111,12 @@ def scene_setup() -> None:
         )
         say("")
     say("")
-    say("Arm B egress on context kind-kind")
+    say("Sandboxed agent egress on context kind-lab01-sandboxed")
     image = run(
         [
             "kubectl",
             "--context",
-            "kind-kind",
+            "kind-lab01-sandboxed",
             "-n",
             "ate-system",
             "get",
@@ -134,7 +134,7 @@ def scene_setup() -> None:
         say(f"digest: {digest}")
     say("")
     say("Actor")
-    block(run(["kubectl-ate", "--context", "kind-kind", "get", "actors", "-A"]))
+    block(run(["kubectl-ate", "--context", "kind-lab01-sandboxed", "get", "actors", "-A"]))
 
 
 def scene_injection() -> None:
@@ -145,7 +145,7 @@ def scene_injection() -> None:
     block(prompt)
     say("")
     say(
-        f"Arm A accepted it. results/bare-attack.json duration_seconds={transcript['duration_seconds']} mode={transcript['response']['mode']}"
+        f"Bare agent accepted it. results/bare-attack.json duration_seconds={transcript['duration_seconds']} mode={transcript['response']['mode']}"
     )
     for line in secret_flags(transcript):
         say(line)
@@ -153,37 +153,37 @@ def scene_injection() -> None:
         say(f"http_post status={step.get('status')} url={step.get('url')}")
 
 
-def scene_arm_a_leak() -> None:
+def scene_bare_leak() -> None:
     transcript = read_json("bare-attack.json")
-    say("Arm A leak. Transcript plus the live sink.")
+    say("Bare agent leak. Transcript plus the live attacker server.")
     say(f"results/bare-attack.json duration_seconds={transcript['duration_seconds']}")
     for step in posts(transcript):
         say(f"status={step.get('status')} error={step.get('error')}")
         body = step.get("body")
         block(json.dumps(body, indent=2))
     say("")
-    say("live GET /report on attacker-sink")
-    block(json.dumps(sink_report("kind-lab01-bare"), indent=2))
+    say("live GET /report on attacker-server")
+    block(json.dumps(attacker_server_report("kind-lab01-bare"), indent=2))
 
 
-def scene_arm_b_block() -> None:
-    transcript = read_json("substrate-attack.json")
-    say("Arm B sink attempt. Credential-free actor, Envoy egress.")
-    say(f"results/substrate-attack.json duration_seconds={transcript['duration_seconds']}")
+def scene_sandboxed_block() -> None:
+    transcript = read_json("sandboxed-attack.json")
+    say("Sandboxed agent attacker server attempt. Credential-free actor, agentgateway egress.")
+    say(f"results/sandboxed-attack.json duration_seconds={transcript['duration_seconds']}")
     for line in secret_flags(transcript):
         say(line)
     for index, step in enumerate(posts(transcript), start=1):
         say(f"attempt {index} status={step.get('status')} error={step.get('error')}")
         say(f"  url={step.get('url')}")
     say("")
-    say("live GET /report on the Arm B sink")
-    block(json.dumps(sink_report("kind-kind"), indent=2))
+    say("live GET /report on the Sandboxed agent attacker server")
+    block(json.dumps(attacker_server_report("kind-lab01-sandboxed"), indent=2))
 
 
-def scene_arm_b_legit() -> None:
-    transcript = read_json("substrate-benign.json")
-    say("Allowlisted call on Envoy. This is the recorded result.")
-    say(f"results/substrate-benign.json duration_seconds={transcript['duration_seconds']}")
+def scene_sandboxed_legit() -> None:
+    transcript = read_json("sandboxed-benign.json")
+    say("Allowlisted call on agentgateway. This is the recorded result.")
+    say(f"results/sandboxed-benign.json duration_seconds={transcript['duration_seconds']}")
     for step in posts(transcript):
         say(f"url={step.get('url')}")
         say(f"status={step.get('status')} error={step.get('error')}")
@@ -202,7 +202,7 @@ def scene_scorecard() -> None:
                 str(repo / "scoring" / "score_lab01.py"),
                 "--compare",
                 str(RESULTS / "bare.json"),
-                str(RESULTS / "substrate.json"),
+                str(RESULTS / "sandboxed.json"),
             ]
         )
     )
@@ -211,9 +211,9 @@ def scene_scorecard() -> None:
 SCENES = {
     "setup": scene_setup,
     "injection": scene_injection,
-    "arm-a-leak": scene_arm_a_leak,
-    "arm-b-block": scene_arm_b_block,
-    "arm-b-legit": scene_arm_b_legit,
+    "bare-leak": scene_bare_leak,
+    "sandboxed-block": scene_sandboxed_block,
+    "sandboxed-legit": scene_sandboxed_legit,
     "scorecard": scene_scorecard,
 }
 

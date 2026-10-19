@@ -57,14 +57,14 @@ if (existsSync(lab01Path)) {
 }
 
 const step1Path = join(dist, 'labs/01-secret-exfiltration/01-why-this-lab/index.html');
-const setupPath = join(dist, 'labs/01-secret-exfiltration/03-bring-up-arm-a/index.html');
+const setupPath = join(dist, 'labs/01-secret-exfiltration/03-bring-up-bare/index.html');
 const defendPath = join(dist, 'labs/01-secret-exfiltration/08-defend-with-substrate/index.html');
 const lastPath = join(dist, 'labs/01-secret-exfiltration/14-cleanup-and-recap/index.html');
 const predictPath = join(dist, 'labs/01-secret-exfiltration/04-predict-bare/index.html');
-const revealPath = join(dist, 'labs/01-secret-exfiltration/07-score-arm-a/index.html');
+const revealPath = join(dist, 'labs/01-secret-exfiltration/07-score-bare/index.html');
 const injectionPath = join(dist, 'labs/01-secret-exfiltration/09-how-injection-works/index.html');
 const attackPath = join(dist, 'labs/01-secret-exfiltration/05-attack-the-bare-agent/index.html');
-const challengePath = join(dist, 'labs/01-secret-exfiltration/11-attack-arm-b/index.html');
+const challengePath = join(dist, 'labs/01-secret-exfiltration/11-attack-sandboxed/index.html');
 const replayPath = join(dist, 'labs/01-secret-exfiltration/06-what-just-happened/index.html');
 const stoppedPath = join(dist, 'labs/01-secret-exfiltration/12-where-it-stopped/index.html');
 for (const relativePath of [
@@ -73,7 +73,7 @@ for (const relativePath of [
 	'labs/01-secret-exfiltration/04-predict-bare/index.html',
 	'labs/01-secret-exfiltration/06-what-just-happened/index.html',
 	'labs/01-secret-exfiltration/09-how-injection-works/index.html',
-	'labs/01-secret-exfiltration/11-attack-arm-b/index.html',
+	'labs/01-secret-exfiltration/11-attack-sandboxed/index.html',
 	'labs/01-secret-exfiltration/12-where-it-stopped/index.html',
 ]) {
 	if (!existsSync(join(dist, relativePath))) errors.push(`missing dist/${relativePath}`);
@@ -93,7 +93,7 @@ if (existsSync(predictPath)) {
 if (existsSync(revealPath)) {
 	const reveal = readFileSync(revealPath, 'utf8');
 	if (!reveal.includes('data-reveal="bare"') || !reveal.includes('data-answer="leaks"')) {
-		errors.push('Lab 01 Arm A score is missing the predict reveal');
+		errors.push('Lab 01 Bare agent score is missing the predict reveal');
 	}
 }
 if (existsSync(injectionPath) && !readFileSync(injectionPath, 'utf8').includes('replaceHeaders')) {
@@ -109,7 +109,7 @@ if (existsSync(challengePath) && !readFileSync(challengePath, 'utf8').includes('
 if (existsSync(replayPath)) {
 	const replay = readFileSync(replayPath, 'utf8');
 	if (!replay.includes('class="replay')) errors.push('Lab 01 leak replay is missing the timeline');
-	if (!replay.includes('{"stored": true, "count": 1}')) errors.push('Lab 01 leak replay is missing the sink response');
+	if (!replay.includes('{"stored": true, "count": 1}')) errors.push('Lab 01 leak replay is missing the attacker server response');
 }
 if (existsSync(stoppedPath)) {
 	const stopped = readFileSync(stoppedPath, 'utf8');
@@ -120,11 +120,11 @@ const labsIndex = join(dist, 'labs/index.html');
 if (existsSync(labsIndex) && !readFileSync(labsIndex, 'utf8').includes('Pwn an agent. See exactly how. Then lock it down.')) {
 	errors.push('labs index is missing the mission line');
 }
-const handCluster = join(dist, 'labs/01-secret-exfiltration/02-arm-a-cluster/index.html');
+const handCluster = join(dist, 'labs/01-secret-exfiltration/02-bare-cluster/index.html');
 const handInstall = join(dist, 'labs/01-secret-exfiltration/07-substrate-install/index.html');
-const handActor = join(dist, 'labs/01-secret-exfiltration/09-arm-b-actor/index.html');
-if (existsSync(handCluster) && !readFileSync(handCluster, 'utf8').includes('kind-arm-a.yaml')) {
-	errors.push('Lab 01 hand track is missing the Arm A kind command');
+const handActor = join(dist, 'labs/01-secret-exfiltration/09-sandboxed-actor/index.html');
+if (existsSync(handCluster) && !readFileSync(handCluster, 'utf8').includes('kind-bare.yaml')) {
+	errors.push('Lab 01 hand track is missing the Bare agent kind command');
 }
 const handPrereq = join(dist, 'labs/01-secret-exfiltration/01-prerequisites/index.html');
 if (existsSync(handPrereq) && !readFileSync(handPrereq, 'utf8').includes('What this does')) {
@@ -148,16 +148,16 @@ if (existsSync(handInstall)) {
 if (existsSync(handActor) && !readFileSync(handActor, 'utf8').includes('replaceHeaders')) {
 	errors.push('Lab 01 hand track is missing replaceHeaders');
 }
-if (existsSync(setupPath) && !readFileSync(setupPath, 'utf8').includes('arm-a-up.sh')) {
-	errors.push('Lab 01 setup step is missing arm-a-up.sh');
+if (existsSync(setupPath) && !readFileSync(setupPath, 'utf8').includes('bare-up.sh')) {
+	errors.push('Lab 01 setup step is missing bare-up.sh');
 }
 if (existsSync(defendPath)) {
 	const defend = readFileSync(defendPath, 'utf8');
 	if (!defend.includes('agentgateway')) errors.push('Lab 01 defend step does not name agentgateway');
 	if (!defend.includes('name: Required value')) errors.push('Lab 01 defend step is missing the measured agentgateway error');
 }
-if (existsSync(lastPath) && !readFileSync(lastPath, 'utf8').includes('arm-b-down.sh')) {
-	errors.push('Lab 01 cleanup step is missing arm-b-down.sh');
+if (existsSync(lastPath) && !readFileSync(lastPath, 'utf8').includes('sandboxed-down.sh')) {
+	errors.push('Lab 01 cleanup step is missing sandboxed-down.sh');
 }
 
 if (errors.length > 0) {

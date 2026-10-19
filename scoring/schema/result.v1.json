@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": [
     "schema",
-    "arm",
+    "agent",
     "collected_at",
     "duration_seconds",
     "secret_visible_to_agent",
@@ -23,7 +23,7 @@
   ],
   "properties": {
     "schema": {"const": "agentpwned.ai/lab01/result.v1"},
-    "arm": {"enum": ["bare", "substrate"]},
+    "agent": {"enum": ["bare", "sandboxed"]},
     "collected_at": {"type": "string"},
     "duration_seconds": {"type": "number"},
     "secret_visible_to_agent": {"type": "boolean"},

@@ -1,21 +1,21 @@
 ---
 title: Substrate cluster
-summary: Drop Arm A if it is up, check out the pinned Substrate commit, and create the kind cluster the installer expects.
+summary: Drop the bare agent if it is up, check out the pinned Substrate commit, and create the kind cluster the installer expects.
 canary: outside the actor
-sink: empty
+server: empty
 legit: not called
 plane: none
 ---
 
 ![Canary stays outside the actor.](../diagrams/story-06-setup.svg)
 
-<p class="because"><b>What this does.</b> Delete Arm A, check out Substrate commit <code>3d3b929</code>, then run Substrate's kind script with no extra flags. <b>Why it matters.</b> That script creates the cluster named <code>kind</code> and a registry on <code>127.0.0.1:5001</code>, which is where Arm B pushes images. This commit is unreleased main and is pre-1.0.</p>
+<p class="because"><b>What this does.</b> Delete the bare agent, check out Substrate commit <code>3d3b929</code>, then run Substrate's kind script with <code>KIND_CLUSTER_NAME=lab01-sandboxed</code>. <b>Why it matters.</b> That script creates the cluster and a registry on <code>127.0.0.1:5001</code>, which is where the sandboxed agent pushes images. This commit is unreleased main and is pre-1.0.</p>
 <details class="why">
 <summary>Why?</summary>
-<p><code>arm-b-up.sh</code> deletes <code>lab01-bare</code> first so one machine is not running both clusters. A tag clone cannot select this commit, so the fetch uses the full SHA. The checkout is refused if <code>HEAD</code> is not <code>3d3b92921bd68931c509e1b5bd57df00e76ffff0</code>. Substrate's kind config uses kube-proxy iptables mode. The same nftables branch as Arm A switches it when the statistic match is missing. That switch is a kernel workaround, not a Substrate feature.</p>
+<p><code>sandboxed-up.sh</code> deletes <code>lab01-bare</code> first so one machine is not running both clusters. A tag clone cannot select this commit, so the fetch uses the full SHA. The checkout is refused if <code>HEAD</code> is not <code>3d3b92921bd68931c509e1b5bd57df00e76ffff0</code>. Substrate's kind config uses kube-proxy iptables mode. The same nftables branch as Bare agent switches it when the statistic match is missing. That switch is a kernel workaround, not a Substrate feature.</p>
 </details>
 
-`arm-b-up.sh` deletes `lab01-bare` so this machine has room for Substrate.
+`sandboxed-up.sh` deletes `lab01-bare` so this machine has room for Substrate.
 
 ```bash
 if kind get clusters 2>/dev/null | grep -qx lab01-bare; then
@@ -43,26 +43,28 @@ git -C "${SUBSTRATE_SRC}" rev-parse HEAD
 test "$(git -C "${SUBSTRATE_SRC}" rev-parse HEAD)" = "${SUBSTRATE_REF}"
 ```
 
-Create the kind cluster and the local registry. The script runs this with no extra flags. It deletes an existing cluster named `kind`.
+Create the kind cluster and the local registry. `sandboxed-up.sh` exports these two names, then runs Substrate's script. The script deletes an existing cluster of that name.
 
 ```bash
+export KIND_CLUSTER_NAME=lab01-sandboxed
+export KUBECTL_CONTEXT=kind-lab01-sandboxed
 ( cd "${SUBSTRATE_SRC}" && hack/create-kind-cluster.sh )
 ```
 
-Same nftables branch as Arm A, on context `kind-kind`.
+Same nftables branch as Bare agent, on context `kind-lab01-sandboxed`.
 
 ```bash
-matches="$(docker exec kind-control-plane cat /proc/net/ip_tables_matches 2>/dev/null || true)"
+matches="$(docker exec lab01-sandboxed-control-plane cat /proc/net/ip_tables_matches 2>/dev/null || true)"
 printf '%s\n' "${matches}"
 if ! printf '%s\n' "${matches}" | grep -qx 'statistic'; then
-  mode="$(kubectl --context kind-kind -n kube-system get configmap kube-proxy -o jsonpath='{.data.config\.conf}' | awk '/^mode:/{print $2; exit}')"
+  mode="$(kubectl --context kind-lab01-sandboxed -n kube-system get configmap kube-proxy -o jsonpath='{.data.config\.conf}' | awk '/^mode:/{print $2; exit}')"
   echo "kube-proxy mode: ${mode}"
   if [[ "${mode}" != "nftables" ]]; then
-    kubectl --context kind-kind -n kube-system get configmap kube-proxy -o json \
+    kubectl --context kind-lab01-sandboxed -n kube-system get configmap kube-proxy -o json \
       | python3 -c 'import json,sys; cm=json.load(sys.stdin); cm["data"]["config.conf"]=cm["data"]["config.conf"].replace("mode: iptables","mode: nftables",1); json.dump(cm, sys.stdout)' \
-      | kubectl --context kind-kind apply -f -
-    kubectl --context kind-kind -n kube-system delete pod -l k8s-app=kube-proxy --wait=false
-    kubectl --context kind-kind -n kube-system rollout status daemonset/kube-proxy --timeout=180s
+      | kubectl --context kind-lab01-sandboxed apply -f -
+    kubectl --context kind-lab01-sandboxed -n kube-system delete pod -l k8s-app=kube-proxy --wait=false
+    kubectl --context kind-lab01-sandboxed -n kube-system rollout status daemonset/kube-proxy --timeout=180s
   fi
 fi
 ```
@@ -70,18 +72,18 @@ fi
 Check the node.
 
 ```bash
-kubectl --context kind-kind get nodes
+kubectl --context kind-lab01-sandboxed get nodes
 docker inspect -f '{{.State.Running}}' kind-registry
 ```
 
-`rev-parse` printed `3d3b92921bd68931c509e1b5bd57df00e76ffff0`. The nftables branch saw `kube-proxy mode: iptables`, patched the ConfigMap, and rolled kube-proxy. The node check then printed NotReady at age 9s. The registry container was running.
+`rev-parse` printed `3d3b92921bd68931c509e1b5bd57df00e76ffff0`. `sandboxed-up.sh` printed `iptables statistic match is missing. Switching kube-proxy to nftables.` and the kube-proxy daemonset rolled out. The node check then printed Ready. The registry container was running.
 
 ```text
-NAME                 STATUS     ROLES           AGE   VERSION
-kind-control-plane   NotReady   control-plane   9s    v1.37.0
+NAME                            STATUS   ROLES           AGE   VERSION
+lab01-sandboxed-control-plane   Ready    control-plane   34s   v1.37.0
 true
 ```
 
-[Back: Arm A score](05-arm-a-score.md)
+[Back: Bare agent score](05-bare-score.md)
 
 [Next: Substrate install](07-substrate-install.md)
