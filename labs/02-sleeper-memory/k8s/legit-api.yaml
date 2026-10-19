@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lab02
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: legit-api
+  namespace: lab02
+  labels:
+    app: legit-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: legit-api
+  template:
+    metadata:
+      labels:
+        app: legit-api
+    spec:
+      containers:
+        - name: legit
+          image: lab02-agent:local
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/app/legit.py"]
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: legit-api
+  namespace: lab02
+spec:
+  selector:
+    app: legit-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

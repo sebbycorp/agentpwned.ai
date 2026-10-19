@@ -12,7 +12,7 @@ const required = [
 	'labs/index.html',
 	'labs/template/index.html',
 	'labs/01-secret-exfiltration/index.html',
-	'labs/02-egress-allowlist/index.html',
+	'labs/02-sleeper-memory/index.html',
 	'labs/03-blast-radius/index.html',
 ];
 
@@ -158,6 +158,32 @@ if (existsSync(defendPath)) {
 }
 if (existsSync(lastPath) && !readFileSync(lastPath, 'utf8').includes('sandboxed-down.sh')) {
 	errors.push('Lab 01 cleanup step is missing sandboxed-down.sh');
+}
+
+const lab02 = join(dist, 'labs/02-sleeper-memory/index.html');
+const lab02step = join(dist, 'labs/02-sleeper-memory/01-why-this-lab/index.html');
+const lab02hand = join(dist, 'labs/02-sleeper-memory/01-prerequisites/index.html');
+if (existsSync(join(dist, 'labs/02-egress-allowlist/index.html'))) {
+	errors.push('Egress Allowlist placeholder is still published');
+}
+if (existsSync(lab02)) {
+	const html = readFileSync(lab02, 'utf8');
+	if (!html.includes('>Draft<')) errors.push('Lab 02 page does not show Draft from lab.md');
+	if (!html.includes('/labs/02-sleeper-memory/01-why-this-lab/')) {
+		errors.push('Lab 02 overview does not link to step 1');
+	}
+	if (!html.includes('The sandbox decides what your agent can do.')) {
+		errors.push('Lab 02 overview is missing the framing line');
+	}
+}
+if (existsSync(lab02step)) {
+	const html = readFileSync(lab02step, 'utf8');
+	if (!html.includes('Step 1 of 15')) errors.push('Lab 02 step 1 is missing the progress label');
+	if (!html.includes('<svg')) errors.push('Lab 02 step 1 is missing the lightboard');
+	if (!html.includes('fill="#000000"')) errors.push('Lab 02 lightboard is missing its black board');
+}
+if (existsSync(lab02hand) && !readFileSync(lab02hand, 'utf8').includes('class="why"')) {
+	errors.push('Lab 02 hand track is missing the Why block');
 }
 
 if (errors.length > 0) {

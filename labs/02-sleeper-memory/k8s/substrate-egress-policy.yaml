@@ -1,0 +1,18 @@
+# Actor egress policy for `kubectl ate create egress-policy`.
+# Metadata is filled by kubectl-ate. Two HTTP rules: the ticket server and the
+# vendor API. The attacker server is absent, so default-deny applies to it.
+# replaceHeaders is Substrate credential injection on this main pin. The actor
+# sends a placeholder. The gateway swaps in the Secret on the vendor hop only.
+# This pin has no method or path match. The confused-deputy challenge uses that.
+rules:
+  - http:
+      hostnames:
+        - ticket-server.lab02-shared.svc.cluster.local
+  - http:
+      hostnames:
+        - legit-api.lab02.svc.cluster.local
+      effects:
+        replaceHeaders:
+          - header: Authorization
+            prefix: "Bearer "
+            credentialUri: ate-secret://k8s.io/default/lab02/vendor-api-token/token

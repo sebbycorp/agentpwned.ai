@@ -1,0 +1,51 @@
+# Substrate ActorTemplate (protojson for `kubectl ate create actor-template`).
+# This is not a Kubernetes CRD. The actor image digest is filled in by
+# scripts/sandboxed-up.sh after the image is pushed to the kind registry.
+#
+# Golden snapshots are disabled. The known-good point is an explicit tag taken
+# after a clean boot, before the poison session. preferredFidelity MEMORY asks
+# suspend to capture process memory as well as the DurableDir. This pin is
+# pre-1.0. ActorTemplate has no sandboxConfig. The WorkerPool selects the
+# sandbox class. workerSelector picks the egress demo pool.
+metadata:
+  atespace: lab02
+  name: sleeper-agent
+workerSelector:
+  matchLabels:
+    workload: egress
+containers:
+  - name: agent
+    image: IMAGE_DIGEST_REPLACED_BY_SCRIPT
+    command: ["python3", "/app/agent.py"]
+    env:
+      - name: PORT
+        value: "80"
+      - name: LAB_LLM
+        value: mock
+      - name: LAB_AGENT
+        value: sandboxed
+      - name: MEMORY_PATH
+        value: /memory/standing.json
+      - name: LAB_TICKET_URL
+        value: http://ticket-server.lab02-shared.svc.cluster.local
+    volumeMounts:
+      - name: memory
+        mountPath: /memory
+    wakeupProbe:
+      httpGet:
+        path: /readyz
+        port: 80
+resources:
+  limits:
+    - name: cpu
+      quantity: "500m"
+    - name: memory
+      quantity: 512Mi
+snapshotConfig:
+  preferredFidelity: SNAPSHOT_FIDELITY_MEMORY
+  storageLocation: gs://ate-snapshots/lab02/
+  goldenSnapshotConfig:
+    mode: GOLDEN_SNAPSHOT_MODE_DISABLED
+volumes:
+  - name: memory
+    durableDir: {}
