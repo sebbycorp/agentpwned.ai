@@ -12,6 +12,21 @@ need python3
 echo "Building ${IMAGE_LOCAL}"
 docker build -t "${IMAGE_LOCAL}" "${LAB_ROOT}/agent"
 
+# kind-bare.yaml pins kindest/node v1.37.0. kind 0.29 writes kubeadm v1beta3,
+# which that image rejects, and its default v1.33.1 kube-proxy nftables build
+# exits with "too many open files" on kernel 6.12.
+kind_ver="$(kind version 2>/dev/null | awk '{print $2}' | sed 's/^v//')"
+python3 - "${kind_ver}" <<'PY'
+import sys
+raw = sys.argv[1]
+parts = [int(p) for p in raw.split(".")[:2]] if raw else [0, 0]
+if parts < [0, 31]:
+    sys.exit(
+        f"kind {raw or 'missing'} is too old for kindest/node v1.37.0. "
+        "Install kind 0.31 or newer."
+    )
+PY
+
 if ! kind get clusters | grep -qx "${BARE_CLUSTER}"; then
   echo "Creating kind cluster ${BARE_CLUSTER}"
   kind create cluster --name "${BARE_CLUSTER}" --config "${LAB_ROOT}/k8s/kind-bare.yaml"

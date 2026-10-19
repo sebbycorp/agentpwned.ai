@@ -22,6 +22,10 @@ The attacker server is not on the egress policy. On this pin, `docs/egress-traff
 
 The confused-deputy challenge POSTs to `legit-api` `/deputy`. The host is allowlisted. This pin has no path or method match in `EgressPolicy`. The canary landing there is the honest result.
 
+## Bare cluster node image
+
+`k8s/kind-bare.yaml` pins `kindest/node` v1.37.0, the same image the sandboxed cluster uses. kind 0.29's default node is v1.33.1. On kernel 6.12.94+ that kube-proxy nftables build exits with `too many open files`, and kind 0.29 cannot init the v1.37.0 image because it still writes kubeadm `v1beta3`. `bare-up.sh` requires kind 0.31 or newer. If kube-proxy then logs `fsnotify watcher init: too many open files`, the kernel `fs.inotify.max_user_instances` is exhausted, which happens when two kind clusters share this VM. Raise that sysctl. It is not a Substrate setting.
+
 ## If MEMORY resume does not keep the Python process
 
 The template asks for `SNAPSHOT_FIDELITY_MEMORY`. The scorecard records whether `boot_id` survived suspend and resume. If it did not, say so and keep the DurableDir result. Do not invent a MEMORY success. `in_ram_counter_continued` is recorded either way. The exercise pass for the sandboxed phase is the poison in the file, a blocked callback, a real gateway deny, and injection.
