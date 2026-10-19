@@ -77,6 +77,15 @@ kubectl --context kind-kind -n ate-system get deploy atenet-egress
 kubectl --context kind-kind -n ate-demo-egress get workerpool egress
 ```
 
+This run kept Envoy (`atenet.dataplane envoy`, from the v0.5.0 default). The background loop printed `removed atelet hostPort 8085`. The push line was `Actor image localhost:5001/lab01-agent@sha256:804543d3aca8a3b9f62de347b2ee4e5ebbd175757fa6897803c91b006559d0a2`. The check printed:
+
+```text
+NAME            READY   UP-TO-DATE   AVAILABLE   AGE
+atenet-egress   1/1     1            1           83s
+NAME     DESIRED   REPLICAS   READY   SANDBOXCONFIG    RESOLVED   AGE
+egress   1         1          1       gvisor-default   True       68s
+```
+
 [Back: Substrate cluster](06-substrate-kind.md)
 
 [Next: Arm B services](08-arm-b-services.md)

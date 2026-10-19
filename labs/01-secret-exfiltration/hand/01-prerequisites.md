@@ -38,6 +38,17 @@ Check that each command printed a path and the Go snippet printed nothing.
 command -v docker && command -v kind && command -v kubectl && command -v python3 && command -v git && go env GOVERSION
 ```
 
+This run printed the paths below. The Go snippet printed nothing. `go env GOVERSION` was `go1.27.2`.
+
+```text
+/usr/bin/docker
+/usr/local/bin/kind
+/usr/local/bin/kubectl
+/usr/bin/python3
+/usr/bin/git
+go1.27.2
+```
+
 [Overview](../README.md)
 
 [Next: Arm A cluster](02-arm-a-cluster.md)

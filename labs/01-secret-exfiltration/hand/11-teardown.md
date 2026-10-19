@@ -29,4 +29,6 @@ kind get clusters
 docker ps -a --filter name=kind-registry --format '{{.Names}}'
 ```
 
+This run printed `No kind clusters found.` The registry name filter printed nothing.
+
 [Back: Arm B score](10-arm-b-score.md)

@@ -136,6 +136,21 @@ kubectl --context kind-lab01-bare get deploy,svc -n lab01
 kubectl --context kind-lab01-bare get ns lab01-bare
 ```
 
+Printed on this run, one second after apply. Ready was still 0. The next page waits for rollout.
+
+```text
+NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/attacker-sink   0/1     1            0           1s
+NAME                    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/attacker-sink   ClusterIP   10.96.87.129   <none>        80/TCP    1s
+NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/legit-api   0/1     1            0           1s
+NAME                TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+service/legit-api   ClusterIP   10.96.78.78   <none>        80/TCP    1s
+NAME         STATUS   AGE
+lab01-bare   Active   0s
+```
+
 [Back: Arm A cluster](02-arm-a-cluster.md)
 
 [Next: Arm A agent](04-arm-a-agent.md)

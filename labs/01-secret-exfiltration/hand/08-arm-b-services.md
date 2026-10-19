@@ -225,6 +225,23 @@ kubectl --context kind-kind get deploy,svc -n lab01
 kubectl --context kind-kind -n lab01 get secret vendor-api-token
 ```
 
+On this kernel `kind load` printed `unknown containerd config version: 4`. The `ctr` import then tagged `docker.io/library/lab01-agent:local`. After the rollouts the check printed:
+
+```text
+NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/attacker-sink   1/1     1            1           14s
+NAME                    TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/attacker-sink   ClusterIP   10.96.28.2   <none>        80/TCP    14s
+NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/dummy       1/1     1            1           13s
+deployment.apps/legit-api   1/1     1            1           13s
+NAME                TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/dummy       ClusterIP   10.96.51.225   <none>        80/TCP    13s
+service/legit-api   ClusterIP   10.96.136.66   <none>        80/TCP    13s
+NAME               TYPE     DATA   AGE
+vendor-api-token   Opaque   1      11s
+```
+
 [Back: Substrate install](07-substrate-install.md)
 
 [Next: Arm B actor](09-arm-b-actor.md)

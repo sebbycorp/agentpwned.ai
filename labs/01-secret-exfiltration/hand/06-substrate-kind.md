@@ -60,6 +60,14 @@ kubectl --context kind-kind get nodes
 docker inspect -f '{{.State.Running}}' kind-registry
 ```
 
+Checkout on this run: `e8d40c33f96f4b7a4984bfea7334a36ab5b45b7b`. The nftables branch saw `kube-proxy mode: iptables`, patched the ConfigMap, and rolled kube-proxy. The node check then printed NotReady at age 11s. The registry container was running. The node was Ready before the install rollouts on the next page.
+
+```text
+NAME                 STATUS     ROLES           AGE   VERSION
+kind-control-plane   NotReady   control-plane   11s   v1.37.0
+true
+```
+
 [Back: Arm A score](05-arm-a-score.md)
 
 [Next: Substrate install](07-substrate-install.md)

@@ -43,7 +43,7 @@ The predict step stores Leaks or Blocked in the browser (`localStorage` keys `la
 
 ## Build it by hand
 
-`hand/` is the same bring-up as `scripts/arm-a-up.sh` and `scripts/arm-b-up.sh`, one command at a time. The quick path stays the scripted steps. The hand pages show the YAML those scripts apply and a check after each stage. `kubectl` and `score.sh` output on those pages is pasted from that hand run.
+`hand/` is the same bring-up as `scripts/arm-a-up.sh` and `scripts/arm-b-up.sh`, one command at a time. The quick path stays the scripted steps. The hand pages show the YAML those scripts apply and a check after each stage. `kubectl` and `score.sh` output on those pages is pasted from the hand run on 2026-10-19. Arm A was scored again after the sink Service answered. Arm B was scored once, on Envoy.
 
 ## Pins
 

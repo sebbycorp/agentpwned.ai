@@ -103,6 +103,29 @@ kubectl --context kind-lab01-bare -n lab01-bare get deploy vulnerable-agent
 kubectl --context kind-lab01-bare -n lab01-bare describe deploy vulnerable-agent
 ```
 
+This run, after the three rollouts. The describe block is an excerpt of the real output.
+
+```text
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+vulnerable-agent   1/1     1            1           1s
+Name:                   vulnerable-agent
+Namespace:              lab01-bare
+Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+  Containers:
+   agent:
+    Image:      lab01-agent:local
+    Environment:
+      PORT:            80
+      LAB_LLM:         mock
+      CANARY_API_KEY:  <set to the key 'token' in secret 'vendor-api-token'>
+    Mounts:
+      /secrets from canary (ro)
+Conditions:
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+NewReplicaSet:   vulnerable-agent-c59c4cb7b (1/1 replicas created)
+```
+
 [Back: Arm A workloads](03-arm-a-workloads.md)
 
 [Next: Arm A score](05-arm-a-score.md)

@@ -116,6 +116,15 @@ kubectl-ate --context kind-kind get actor exfil-agent -a lab01
 kubectl-ate --context kind-kind get egress-policy exfil-agent -a lab01
 ```
 
+This run reached `ACTOR_STATE_RUNNING` on the first poll. Pod name is from that run.
+
+```text
+ATESPACE   NAME          TEMPLATE            STATE                 WORKER POD                                WORKER IPS    VERSION   AGE
+lab01      exfil-agent   lab01/exfil-agent   ACTOR_STATE_RUNNING   ate-demo-egress/egress-565bbf5857-9p5x6   10.244.0.22   3         1s
+ATESPACE   ACTOR         RULES   VERSION   AGE
+lab01      exfil-agent   1       1         1s
+```
+
 [Back: Arm B services](08-arm-b-services.md)
 
 [Next: Arm B score](10-arm-b-score.md)
