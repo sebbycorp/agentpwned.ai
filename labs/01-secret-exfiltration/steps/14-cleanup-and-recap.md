@@ -14,6 +14,6 @@ labs/01-secret-exfiltration/scripts/arm-a-down.sh
 labs/01-secret-exfiltration/scripts/arm-b-down.sh
 ```
 
-Arm A stored the canary in the process, and the sink kept it. Arm B on agentgateway kept the canary out of the actor, injected it on the allowlisted call, and left the sink empty.
+You pwned the bare agent, replayed the leak, locked the actor down with agentgateway, and the same prompts failed. Arm A stored the canary in the process, and the sink kept one post. Arm B kept the canary out of the actor, injected it on the allowlisted call, and left the sink empty.
 
-[Back: Try to get the canary out](12-challenge.md)
+[Back: The difference](13-score-the-difference.md)

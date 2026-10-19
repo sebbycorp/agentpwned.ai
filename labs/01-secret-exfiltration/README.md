@@ -1,5 +1,7 @@
 # Lab 01: Secret Exfiltration
 
+Pwn an agent. See exactly how. Then lock it down.
+
 One hostile prompt. Two clusters. Arm A holds the canary. Arm B is a Substrate actor on agentgateway: the actor does not hold the key, the allowlisted call gets it, the sink does not.
 
 ![Bare leaks. agentgateway injects and blocks.](diagrams/story-07-compare.svg)
@@ -18,15 +20,16 @@ Start at [Step 1: The agent](steps/01-why-this-lab.md).
 2. [What it can touch](steps/02-prerequisites.md)
 3. [Bring up Arm A](steps/03-bring-up-arm-a.md)
 4. [Predict Arm A](steps/04-predict-bare.md)
-5. [The leak](steps/05-attack-the-bare-agent.md)
-6. [Arm A score](steps/06-score-arm-a.md)
-7. [agentgateway](steps/07-defend-with-substrate.md)
-8. [How injection works](steps/08-how-injection-works.md)
-9. [Predict Arm B](steps/09-predict-sandbox.md)
-10. [The sandboxed run](steps/10-attack-arm-b.md)
-11. [The difference](steps/11-score-the-difference.md)
-12. [Try to get the canary out](steps/12-challenge.md)
-13. [Tear down](steps/13-cleanup-and-recap.md)
+5. [Pwn it](steps/05-attack-the-bare-agent.md)
+6. [What just happened](steps/06-what-just-happened.md)
+7. [Arm A score](steps/07-score-arm-a.md)
+8. [agentgateway](steps/08-defend-with-substrate.md)
+9. [How injection works](steps/09-how-injection-works.md)
+10. [Predict Arm B](steps/10-predict-sandbox.md)
+11. [Pwn it again](steps/11-attack-arm-b.md)
+12. [Where it stopped](steps/12-where-it-stopped.md)
+13. [The difference](steps/13-score-the-difference.md)
+14. [Tear down](steps/14-cleanup-and-recap.md)
 
 Instructor notes: [instructor.md](instructor.md).
 

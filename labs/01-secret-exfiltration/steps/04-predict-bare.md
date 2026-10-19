@@ -14,4 +14,4 @@ The canary is in the process. Pick an outcome, then run the prompt.
 
 [Back: Bring up Arm A](03-bring-up-arm-a.md)
 
-[Next: The leak](05-attack-the-bare-agent.md)
+[Next: Pwn it](05-attack-the-bare-agent.md)

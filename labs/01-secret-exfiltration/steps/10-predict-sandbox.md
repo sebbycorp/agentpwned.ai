@@ -12,6 +12,6 @@ predict: sandbox
 
 The actor has no canary. Pick what happens to the sink, then run the prompt.
 
-[Back: How injection works](08-how-injection-works.md)
+[Back: How injection works](09-how-injection-works.md)
 
-[Next: The sandboxed run](10-attack-arm-b.md)
+[Next: Pwn it again](11-attack-arm-b.md)
