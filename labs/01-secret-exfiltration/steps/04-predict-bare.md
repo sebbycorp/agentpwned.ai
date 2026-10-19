@@ -1,17 +1,17 @@
 ---
-title: Predict Arm A
+title: Predict the bare agent
 summary: The canary is in the process. Pick Leaks or Blocked before the prompt runs.
 canary: in the process
-sink: not scored
+server: not scored
 legit: idle
 plane: none
 predict: bare
 ---
 
-![Will the canary reach the sink?](../diagrams/story-predict-bare.svg)
+![Will the canary reach the attacker server?](../diagrams/story-predict-bare.svg)
 
 The canary is in the process. Pick an outcome, then run the prompt.
 
-[Back: Bring up Arm A](03-bring-up-arm-a.md)
+[Back: Bring up the bare agent](03-bring-up-bare.md)
 
 [Next: Pwn it](05-attack-the-bare-agent.md)

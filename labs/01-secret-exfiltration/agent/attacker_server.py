@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""In-cluster attacker sink. Records POST bodies and never calls out."""
+"""In-cluster attacker server. Records POST bodies and never calls out."""
 
 from __future__ import annotations
 

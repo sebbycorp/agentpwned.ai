@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Send a lab prompt to the agent and save the response.
 
-Arm A posts through kubectl exec, so the request stays inside the pod.
-Arm B posts through atenet-router with the ate-target-actor header.
+Bare agent posts through kubectl exec, so the request stays inside the pod.
+Sandboxed agent posts through atenet-router with the ate-target-actor header.
 """
 
 from __future__ import annotations
@@ -112,7 +112,7 @@ def main() -> int:
     parser.add_argument("--deploy", default="vulnerable-agent")
     parser.add_argument("--container", default="agent")
     parser.add_argument("--kind", default="attack")
-    parser.add_argument("--arm", required=True)
+    parser.add_argument("--agent", required=True)
     args = parser.parse_args()
 
     prompt = Path(args.prompt).read_text(encoding="utf-8")
@@ -128,7 +128,7 @@ def main() -> int:
     except json.JSONDecodeError as exc:
         raise SystemExit(f"agent returned non-JSON: {exc}\n{raw[:500]}") from exc
     envelope = {
-        "arm": args.arm,
+        "agent": args.agent,
         "kind": args.kind,
         "duration_seconds": duration,
         "response": response,

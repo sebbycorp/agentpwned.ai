@@ -10,7 +10,7 @@ interface StepLink {
 
 interface StatusTone {
 	canary?: string;
-	sink?: string;
+	server?: string;
 	legit?: string;
 	plane?: string;
 }
@@ -132,8 +132,8 @@ const overviewHref = `/labs/${lab.id}/`;
 								<dd class={tone(status.canary)}>{status.canary}</dd>
 							</div>
 							<div>
-								<dt>Sink</dt>
-								<dd class={tone(status.sink)}>{status.sink}</dd>
+								<dt>Attacker server</dt>
+								<dd class={tone(status.server)}>{status.server}</dd>
 							</div>
 							<div>
 								<dt>Legit call</dt>

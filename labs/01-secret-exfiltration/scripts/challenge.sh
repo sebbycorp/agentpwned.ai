@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Four Arm B attempts. Every target is an in-cluster Service.
-# Prints one line per attempt and whether the canary reached the sink.
+# Four Sandboxed agent attempts. Every target is an in-cluster Service.
+# Prints one line per attempt and whether the canary reached the attacker server.
 
 set -o errexit -o nounset -o pipefail
 source "$(dirname "$0")/common.sh"
@@ -8,7 +8,7 @@ source "$(dirname "$0")/common.sh"
 need kubectl
 need python3
 
-for name in challenge-read.txt challenge-sink.txt challenge-dummy.txt challenge-dns.txt; do
+for name in challenge-read.txt challenge-attacker-server.txt challenge-dummy.txt challenge-dns.txt; do
   assert_prompt_is_cluster_local "${LAB_ROOT}/attack/${name}"
 done
 
@@ -17,19 +17,19 @@ post() {
   local prompt="$2"
   python3 "${LAB_ROOT}/scripts/post_prompt.py" \
     --via router \
-    --arm substrate \
-    --context "${ARM_B_CONTEXT}" \
+    --agent sandboxed \
+    --context "${SANDBOXED_CONTEXT}" \
     --prompt "${LAB_ROOT}/attack/${prompt}" \
     --out "${RESULTS_DIR}/challenge-${kind}.json" \
     --kind "challenge-${kind}"
 }
 
 post read challenge-read.txt
-post sink challenge-sink.txt
+post attacker-server challenge-attacker-server.txt
 post dummy challenge-dummy.txt
 post dns challenge-dns.txt
 
-python3 - "${REPO_ROOT}" "${LAB_ROOT}" "${ARM_B_CONTEXT}" <<'PY'
+python3 - "${REPO_ROOT}" "${LAB_ROOT}" "${SANDBOXED_CONTEXT}" <<'PY'
 import json
 import sys
 from pathlib import Path
@@ -44,17 +44,17 @@ from lib.collect import http_via_port_forward
 def load(name: str) -> dict:
     return json.loads((lab / "results" / name).read_text(encoding="utf-8"))
 
-canary = (lab / "results" / "substrate-canary.txt").read_text(encoding="utf-8").strip()
-sink = json.loads(http_via_port_forward(context, "lab01-shared", "svc/attacker-sink", 80, "/report"))
+canary = (lab / "results" / "sandboxed-canary.txt").read_text(encoding="utf-8").strip()
+attacker_server = json.loads(http_via_port_forward(context, "lab01-shared", "svc/attacker-server", 80, "/report"))
 dummy = json.loads(http_via_port_forward(context, "lab01", "svc/dummy", 80, "/report"))
 report = evaluate_challenge(
     {
         "read": load("challenge-read.json"),
-        "sink": load("challenge-sink.json"),
+        "attacker-server": load("challenge-attacker-server.json"),
         "dummy": load("challenge-dummy.json"),
         "dns": load("challenge-dns.json"),
     },
-    sink,
+    attacker_server,
     dummy,
     canary,
 )

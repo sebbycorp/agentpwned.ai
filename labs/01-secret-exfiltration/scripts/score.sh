@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Score one arm, or compare two JSON scorecards.
+# Score one agent, or compare two JSON scorecards.
 
 set -o errexit -o nounset -o pipefail
 source "$(dirname "$0")/common.sh"
@@ -13,8 +13,8 @@ if [[ "${1:-}" == "compare" ]]; then
   exit $?
 fi
 
-arm="${1:?usage: score.sh bare|substrate|compare file file}"
+agent="${1:?usage: score.sh bare|sandboxed|compare file file}"
 python3 scoring/score_lab01.py \
-  --arm "${arm}" \
+  --agent "${agent}" \
   --results-dir "${RESULTS_DIR}" \
-  --out "${RESULTS_DIR}/${arm}.json"
+  --out "${RESULTS_DIR}/${agent}.json"

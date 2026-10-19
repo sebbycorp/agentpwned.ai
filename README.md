@@ -6,7 +6,7 @@ Everything here runs on a local kind cluster, with canary secrets only. See [SEC
 
 ## Labs
 
-- [Lab 01: Secret Exfiltration](labs/01-secret-exfiltration/README.md). Status comes from [lab.md](labs/01-secret-exfiltration/lab.md) and is `draft`. The student pages are the step files under `labs/01-secret-exfiltration/steps/`. Arm A gives the agent a canary key. Arm B runs the same agent as an [Agent Substrate](https://github.com/agent-substrate/substrate) actor: the actor does not hold the key, an egress allowlist blocks the sink, and the gateway injects the key only toward the allowlisted vendor API. The default egress dataplane is Envoy. The lab does not use a `SandboxAgent` CRD.
+- [Lab 01: Secret Exfiltration](labs/01-secret-exfiltration/README.md). Status comes from [lab.md](labs/01-secret-exfiltration/lab.md) and is `draft`. The student pages are the step files under `labs/01-secret-exfiltration/steps/`. Bare agent gives the agent a canary key. Sandboxed agent runs the same agent as an [Agent Substrate](https://github.com/agent-substrate/substrate) actor: the actor does not hold the key, an egress allowlist blocks the attacker server, and the gateway injects the key only toward the allowlisted vendor API. The egress dataplane is agentgateway. The lab does not use a `SandboxAgent` CRD.
 
 The site renders Lab 01 from those files. Later labs can stay as placeholders in the site until a `labs/` folder exists.
 
@@ -47,7 +47,7 @@ Follow [labs/01-secret-exfiltration/README.md](labs/01-secret-exfiltration/READM
 make test
 ```
 
-That runs the scoring unit tests. The `make lab01-*` targets bring clusters up and down. They need Docker and kind, and Arm B needs a Substrate checkout. Details are in the lab README.
+That runs the scoring unit tests. The `make lab01-*` targets bring clusters up and down. They need Docker and kind, and Sandboxed agent needs a Substrate checkout. Details are in the lab README.
 
 ## Add a lab
 

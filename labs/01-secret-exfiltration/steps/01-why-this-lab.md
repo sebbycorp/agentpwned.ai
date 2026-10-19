@@ -2,7 +2,7 @@
 title: The agent
 summary: A process with a socket. The canary is not here yet.
 canary: not placed
-sink: idle
+server: idle
 legit: idle
 plane: none
 ---

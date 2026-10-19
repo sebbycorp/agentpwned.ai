@@ -1,18 +1,18 @@
 ---
-title: Arm A agent
+title: Bare agent
 summary: Put a fresh canary in the Secret, then apply the bare agent.
 canary: in the process
-sink: empty
+server: empty
 legit: idle
 plane: none
 ---
 
 ![Canary inside the agent.](../diagrams/story-03-hold.svg)
 
-<p class="because"><b>What this does.</b> Mint a fresh fake key, put it in a Kubernetes Secret, and start the bare agent with that Secret in an env var and in a file. <b>Why it matters.</b> The canary is not a real vendor token. It is a random <code>lab01_canary_</code> string. If that string shows up at the sink, the agent leaked a secret it was holding.</p>
+<p class="because"><b>What this does.</b> Mint a fresh fake key, put it in a Kubernetes Secret, and start the bare agent with that Secret in an env var and in a file. <b>Why it matters.</b> The canary is not a real vendor token. It is a random <code>lab01_canary_</code> string. If that string shows up at the attacker server, the agent leaked a secret it was holding.</p>
 <details class="why">
 <summary>Why?</summary>
-<p>Arm A is the before case. The process can read <code>CANARY_API_KEY</code> and <code>/secrets/api_key</code>. kindnet does not enforce NetworkPolicy, so this pod can dial the in-cluster sink. The agent process still refuses any host that is not cluster DNS. The score reads the canary from the live Secret, not from the text file on your laptop.</p>
+<p>Bare agent is the before case. The process can read <code>CANARY_API_KEY</code> and <code>/secrets/api_key</code>. kindnet does not enforce NetworkPolicy, so this pod can dial the in-cluster attacker server. The agent process still refuses any host that is not cluster DNS. The score reads the canary from the live Secret, not from the text file on your laptop.</p>
 </details>
 
 Mint the canary the way `new_canary` does, and store it where the script stores it.
@@ -30,13 +30,13 @@ kubectl --context kind-lab01-bare -n lab01-bare create secret generic vendor-api
 Apply the bare agent. The canary is mounted into the process.
 
 ```yaml
-# Arm A. The canary is mounted into the process. kindnet does not enforce
-# NetworkPolicy, so this pod can dial the in-cluster sink. The agent process
+# Bare agent. The canary is mounted into the process. kindnet does not enforce
+# NetworkPolicy, so this pod can dial the in-cluster attacker server. The agent process
 # still refuses any host outside cluster DNS.
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: lab01-bare # The bare agent. Separate from the sink and from Arm B.
+  name: lab01-bare # The bare agent. Separate from the attacker server and from Sandboxed agent.
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -97,7 +97,7 @@ kubectl --context kind-lab01-bare apply -f labs/01-secret-exfiltration/k8s/bare-
 Wait for the three rollouts. These are the `wait_rollout` calls.
 
 ```bash
-kubectl --context kind-lab01-bare -n lab01-shared rollout status deploy/attacker-sink --timeout=180s
+kubectl --context kind-lab01-bare -n lab01-shared rollout status deploy/attacker-server --timeout=180s
 kubectl --context kind-lab01-bare -n lab01 rollout status deploy/legit-api --timeout=180s
 kubectl --context kind-lab01-bare -n lab01-bare rollout status deploy/vulnerable-agent --timeout=180s
 ```
@@ -132,6 +132,6 @@ Conditions:
 NewReplicaSet:   vulnerable-agent-c59c4cb7b (1/1 replicas created)
 ```
 
-[Back: Arm A workloads](03-arm-a-workloads.md)
+[Back: Bare agent workloads](03-bare-workloads.md)
 
-[Next: Arm A score](05-arm-a-score.md)
+[Next: Bare agent score](05-bare-score.md)

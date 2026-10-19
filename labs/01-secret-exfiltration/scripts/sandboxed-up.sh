@@ -16,6 +16,9 @@ need go
 need kubectl
 need python3
 
+export KIND_CLUSTER_NAME="${SANDBOXED_CLUSTER}"
+export KUBECTL_CONTEXT="${SANDBOXED_CONTEXT}"
+
 go_major="$(go env GOVERSION | sed 's/^go//')"
 python3 - "${go_major}" <<'PY'
 import sys
@@ -24,9 +27,9 @@ if parts < [1, 27]:
     sys.exit(f"Go {sys.argv[1]} is too old. This Substrate pin requires Go 1.27 or newer.")
 PY
 
-if kind get clusters 2>/dev/null | grep -qx "${ARM_A_CLUSTER}"; then
-  echo "Deleting ${ARM_A_CLUSTER} so this machine has room for Substrate."
-  kind delete cluster --name "${ARM_A_CLUSTER}" || true
+if kind get clusters 2>/dev/null | grep -qx "${BARE_CLUSTER}"; then
+  echo "Deleting ${BARE_CLUSTER} so this machine has room for Substrate."
+  kind delete cluster --name "${BARE_CLUSTER}" || true
 fi
 
 pin_substrate_checkout
@@ -39,7 +42,7 @@ pin_substrate_checkout
 # Substrate's kind config uses kube-proxy iptables mode. On kernels that
 # reject the statistic match, ClusterIP never programs. Fix that before the
 # installer waits on Services.
-ensure_cluster_services "${ARM_B_CONTEXT}"
+ensure_cluster_services "${SANDBOXED_CONTEXT}"
 
 echo "Building ${IMAGE_REGISTRY} and pushing it to the kind registry"
 docker build -t "${IMAGE_REGISTRY}" "${LAB_ROOT}/agent"
@@ -61,7 +64,7 @@ export GOMAXPROCS="${GOMAXPROCS:-2}"
 pin_agentgateway_image
 echo "Atenet dataplane: agentgateway (${AGENTGATEWAY_IMAGE})"
 
-relax_atelet_hostport "${ARM_B_CONTEXT}"
+relax_atelet_hostport "${SANDBOXED_CONTEXT}"
 
 (
   cd "${SUBSTRATE_SRC}"
@@ -86,58 +89,58 @@ mkdir -p "${GOBIN}"
 
 # One worker is enough for a single lab actor, and it leaves RAM for the
 # control plane. The demo manifest ships replicas: 2.
-kubectl --context "${ARM_B_CONTEXT}" -n ate-demo-egress patch workerpool egress \
+kubectl --context "${SANDBOXED_CONTEXT}" -n ate-demo-egress patch workerpool egress \
   --type merge -p '{"spec":{"replicas":1}}'
 
-kubectl --context "${ARM_B_CONTEXT}" apply -f "${LAB_ROOT}/k8s/sink.yaml"
-kubectl --context "${ARM_B_CONTEXT}" apply -f "${LAB_ROOT}/k8s/legit-api.yaml"
-kubectl --context "${ARM_B_CONTEXT}" apply -f "${LAB_ROOT}/k8s/dummy.yaml"
-load_kind_image "${IMAGE_REGISTRY}" "${ARM_B_CLUSTER}"
-kubectl --context "${ARM_B_CONTEXT}" -n lab01-shared delete pod -l app=attacker-sink --wait=false || true
-kubectl --context "${ARM_B_CONTEXT}" -n lab01 delete pod -l app=legit-api --wait=false || true
-kubectl --context "${ARM_B_CONTEXT}" -n lab01 delete pod -l app=dummy --wait=false || true
+kubectl --context "${SANDBOXED_CONTEXT}" apply -f "${LAB_ROOT}/k8s/attacker-server.yaml"
+kubectl --context "${SANDBOXED_CONTEXT}" apply -f "${LAB_ROOT}/k8s/legit-api.yaml"
+kubectl --context "${SANDBOXED_CONTEXT}" apply -f "${LAB_ROOT}/k8s/dummy.yaml"
+load_kind_image "${IMAGE_REGISTRY}" "${SANDBOXED_CLUSTER}"
+kubectl --context "${SANDBOXED_CONTEXT}" -n lab01-shared delete pod -l app=attacker-server --wait=false || true
+kubectl --context "${SANDBOXED_CONTEXT}" -n lab01 delete pod -l app=legit-api --wait=false || true
+kubectl --context "${SANDBOXED_CONTEXT}" -n lab01 delete pod -l app=dummy --wait=false || true
 
 CANARY="$(new_canary)"
-printf '%s\n' "${CANARY}" > "${RESULTS_DIR}/substrate-canary.txt"
-chmod 600 "${RESULTS_DIR}/substrate-canary.txt"
-kubectl --context "${ARM_B_CONTEXT}" -n lab01 delete secret vendor-api-token --ignore-not-found
-kubectl --context "${ARM_B_CONTEXT}" -n lab01 create secret generic vendor-api-token \
+printf '%s\n' "${CANARY}" > "${RESULTS_DIR}/sandboxed-canary.txt"
+chmod 600 "${RESULTS_DIR}/sandboxed-canary.txt"
+kubectl --context "${SANDBOXED_CONTEXT}" -n lab01 delete secret vendor-api-token --ignore-not-found
+kubectl --context "${SANDBOXED_CONTEXT}" -n lab01 create secret generic vendor-api-token \
   --from-literal=token="${CANARY}"
 
-kubectl --context "${ARM_B_CONTEXT}" -n ate-system create configmap \
+kubectl --context "${SANDBOXED_CONTEXT}" -n ate-system create configmap \
   k8s-credential-provider-namespace-policy \
   --from-file="namespace-policy.yaml=${LAB_ROOT}/k8s/namespace-policy.yaml" \
-  --dry-run=client -o yaml | kubectl --context "${ARM_B_CONTEXT}" apply -f -
-kubectl --context "${ARM_B_CONTEXT}" -n ate-system rollout restart deploy/k8s-credential-provider
-kubectl --context "${ARM_B_CONTEXT}" -n ate-system rollout status deploy/k8s-credential-provider --timeout=180s
+  --dry-run=client -o yaml | kubectl --context "${SANDBOXED_CONTEXT}" apply -f -
+kubectl --context "${SANDBOXED_CONTEXT}" -n ate-system rollout restart deploy/k8s-credential-provider
+kubectl --context "${SANDBOXED_CONTEXT}" -n ate-system rollout status deploy/k8s-credential-provider --timeout=180s
 
-wait_rollout "${ARM_B_CONTEXT}" lab01-shared attacker-sink
-wait_rollout "${ARM_B_CONTEXT}" lab01 legit-api
-wait_rollout "${ARM_B_CONTEXT}" lab01 dummy
+wait_rollout "${SANDBOXED_CONTEXT}" lab01-shared attacker-server
+wait_rollout "${SANDBOXED_CONTEXT}" lab01 legit-api
+wait_rollout "${SANDBOXED_CONTEXT}" lab01 dummy
 
 template="$(mktemp)"
 sed "s|IMAGE_DIGEST_REPLACED_BY_SCRIPT|${image_ref}|" \
   "${LAB_ROOT}/k8s/substrate-actor-template.yaml" > "${template}"
 
-kubectl-ate --context "${ARM_B_CONTEXT}" create atespace lab01
-kubectl-ate --context "${ARM_B_CONTEXT}" create actor-template -f "${template}"
+kubectl-ate --context "${SANDBOXED_CONTEXT}" create atespace lab01
+kubectl-ate --context "${SANDBOXED_CONTEXT}" create actor-template -f "${template}"
 rm -f "${template}"
-kubectl-ate --context "${ARM_B_CONTEXT}" create actor exfil-agent -a lab01 --template exfil-agent
-kubectl-ate --context "${ARM_B_CONTEXT}" create egress-policy exfil-agent -a lab01 \
+kubectl-ate --context "${SANDBOXED_CONTEXT}" create actor exfil-agent -a lab01 --template exfil-agent
+kubectl-ate --context "${SANDBOXED_CONTEXT}" create egress-policy exfil-agent -a lab01 \
   -f "${LAB_ROOT}/k8s/substrate-egress-policy.yaml"
-kubectl-ate --context "${ARM_B_CONTEXT}" resume actor exfil-agent -a lab01
+kubectl-ate --context "${SANDBOXED_CONTEXT}" resume actor exfil-agent -a lab01
 
 echo "Waiting for the actor to report RUNNING"
 for _ in $(seq 1 60); do
-  state="$(kubectl-ate --context "${ARM_B_CONTEXT}" get actor exfil-agent -a lab01 -o json \
+  state="$(kubectl-ate --context "${SANDBOXED_CONTEXT}" get actor exfil-agent -a lab01 -o json \
     | python3 -c 'import json,sys; print(json.load(sys.stdin).get("status",{}).get("state",""))')"
   echo "actor state: ${state}"
   if [[ "${state}" == "ACTOR_STATE_RUNNING" ]]; then
-    echo "Arm B is up. Context ${ARM_B_CONTEXT}."
+    echo "Sandboxed agent is up. Context ${SANDBOXED_CONTEXT}."
     exit 0
   fi
   sleep 5
 done
 echo "actor did not reach RUNNING" >&2
-kubectl-ate --context "${ARM_B_CONTEXT}" get actor exfil-agent -a lab01 -o yaml || true
+kubectl-ate --context "${SANDBOXED_CONTEXT}" get actor exfil-agent -a lab01 -o yaml || true
 exit 1

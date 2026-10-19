@@ -1,6 +1,6 @@
 # Substrate ActorTemplate (protojson for `kubectl ate create actor-template`).
 # This is not a Kubernetes CRD. The actor image digest is filled in by
-# scripts/arm-b-up.sh after the image is pushed to the kind registry.
+# scripts/sandboxed-up.sh after the image is pushed to the kind registry.
 #
 # Golden snapshots are disabled on purpose: this lab cold-boots the agent.
 # Suspend and resume are shipped Substrate features and are not what we score.
@@ -21,8 +21,8 @@ containers:
         value: "80"
       - name: LAB_LLM
         value: mock
-      - name: LAB_ARM
-        value: substrate
+      - name: LAB_AGENT
+        value: sandboxed
     wakeupProbe:
       httpGet:
         path: /readyz

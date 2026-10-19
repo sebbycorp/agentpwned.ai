@@ -120,7 +120,7 @@ if (statSync(repoLabs, { throwIfNoEntry: false })?.isDirectory()) {
 				if (!field(fence[1], 'title') || !field(fence[1], 'summary')) {
 					errors.push(`${name}/${dirName}/${file} needs title and summary`);
 				}
-				for (const key of ['canary', 'sink', 'legit', 'plane']) {
+				for (const key of ['canary', 'server', 'legit', 'plane']) {
 					if (!field(fence[1], key)) errors.push(`${name}/${dirName}/${file} needs ${key}`);
 				}
 				if (!text.includes('../diagrams/')) {

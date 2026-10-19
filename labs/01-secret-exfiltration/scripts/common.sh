@@ -8,10 +8,10 @@ REPO_ROOT="$(cd "${LAB_ROOT}/../.." && pwd)"
 RESULTS_DIR="${LAB_ROOT}/results"
 IMAGE_LOCAL="lab01-agent:local"
 IMAGE_REGISTRY="localhost:5001/lab01-agent:local"
-ARM_A_CLUSTER="lab01-bare"
-ARM_A_CONTEXT="kind-${ARM_A_CLUSTER}"
-ARM_B_CLUSTER="${KIND_CLUSTER_NAME:-kind}"
-ARM_B_CONTEXT="kind-${ARM_B_CLUSTER}"
+BARE_CLUSTER="lab01-bare"
+BARE_CONTEXT="kind-${BARE_CLUSTER}"
+SANDBOXED_CLUSTER="${SANDBOXED_CLUSTER:-lab01-sandboxed}"
+SANDBOXED_CONTEXT="kind-${SANDBOXED_CLUSTER}"
 # Unreleased Substrate main. Pre-1.0. v0.5.0 plus its pinned agentgateway
 # image returns HTTP 403 "name: Required value": GetActorEgressPolicy is
 # called without name=default, and v0.5.0 does not issue the worker-for-actor

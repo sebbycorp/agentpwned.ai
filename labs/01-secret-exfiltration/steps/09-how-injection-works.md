@@ -2,7 +2,7 @@
 title: How injection works
 summary: Placeholder in. Allowlist check. replaceHeaders on the one allowed host. Every other host is denied.
 canary: outside the actor
-sink: not on policy
+server: not on policy
 legit: allowlisted
 plane: agentgateway
 ---
@@ -13,4 +13,4 @@ The actor sends `Authorization: placeholder`. It does not hold the canary. agent
 
 [Back: agentgateway](08-defend-with-substrate.md)
 
-[Next: Predict Arm B](10-predict-sandbox.md)
+[Next: Predict the sandboxed agent](10-predict-sandbox.md)

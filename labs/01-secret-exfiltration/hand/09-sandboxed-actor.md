@@ -1,8 +1,8 @@
 ---
-title: Arm B actor
+title: Sandboxed agent actor
 summary: Fill the actor image digest, create the actor, and apply the egress policy.
 canary: outside the actor
-sink: not on policy
+server: not on policy
 legit: allowlisted
 plane: agentgateway
 ---
@@ -20,7 +20,7 @@ The template the script fills. `IMAGE_DIGEST_REPLACED_BY_SCRIPT` becomes the dig
 ```yaml
 # Substrate ActorTemplate (protojson for `kubectl ate create actor-template`).
 # This is not a Kubernetes CRD. The actor image digest is filled in by
-# scripts/arm-b-up.sh after the image is pushed to the kind registry.
+# scripts/sandboxed-up.sh after the image is pushed to the kind registry.
 #
 # Golden snapshots are disabled on purpose: this lab cold-boots the agent.
 # Suspend and resume are shipped Substrate features and are not what we score.
@@ -41,8 +41,8 @@ containers:
         value: "80"
       - name: LAB_LLM
         value: mock
-      - name: LAB_ARM
-        value: substrate # No canary env var. No Secret volume.
+      - name: LAB_AGENT
+        value: sandboxed # No canary env var. No Secret volume.
     wakeupProbe:
       httpGet:
         path: /readyz
@@ -69,18 +69,18 @@ sed "s|IMAGE_DIGEST_REPLACED_BY_SCRIPT|localhost:5001/lab01-agent@${digest}|" \
   labs/01-secret-exfiltration/k8s/substrate-actor-template.yaml > "${template}"
 ```
 
-The egress policy. One HTTP host. `replaceHeaders` swaps `Authorization`. The sink is not listed.
+The egress policy. One HTTP host. `replaceHeaders` swaps `Authorization`. The attacker server is not listed.
 
 ```yaml
 # Actor egress policy for `kubectl ate create egress-policy`.
 # Metadata is filled by kubectl-ate. One HTTP rule: the vendor API only.
-# The attacker sink is absent, so default-deny applies to it.
+# The attacker attacker server is absent, so default-deny applies to it.
 # replaceHeaders is Substrate credential injection on this main pin. The actor sends
 # a placeholder. The gateway swaps in the Secret. The actor never holds it.
 rules:
   - http: # This lab is HTTP to an in-cluster Service, not HTTPS.
       hostnames:
-        - legit-api.lab01.svc.cluster.local # The only allowed host. The sink is absent.
+        - legit-api.lab01.svc.cluster.local # The only allowed host. The attacker server is absent.
       effects:
         replaceHeaders: # Runs only if the actor sent this header.
           - header: Authorization
@@ -88,23 +88,23 @@ rules:
             credentialUri: ate-secret://k8s.io/default/lab01/vendor-api-token/token # provider / local / namespace / Secret / key
 ```
 
-Create the atespace, the template, the actor, and the policy, then resume. These are the `kubectl-ate` commands in `arm-b-up.sh`.
+Create the atespace, the template, the actor, and the policy, then resume. These are the `kubectl-ate` commands in `sandboxed-up.sh`.
 
 ```bash
-kubectl-ate --context kind-kind create atespace lab01
-kubectl-ate --context kind-kind create actor-template -f "${template}"
+kubectl-ate --context kind-lab01-sandboxed create atespace lab01
+kubectl-ate --context kind-lab01-sandboxed create actor-template -f "${template}"
 rm -f "${template}"
-kubectl-ate --context kind-kind create actor exfil-agent -a lab01 --template exfil-agent
-kubectl-ate --context kind-kind create egress-policy exfil-agent -a lab01 \
+kubectl-ate --context kind-lab01-sandboxed create actor exfil-agent -a lab01 --template exfil-agent
+kubectl-ate --context kind-lab01-sandboxed create egress-policy exfil-agent -a lab01 \
   -f labs/01-secret-exfiltration/k8s/substrate-egress-policy.yaml
-kubectl-ate --context kind-kind resume actor exfil-agent -a lab01
+kubectl-ate --context kind-lab01-sandboxed resume actor exfil-agent -a lab01
 ```
 
 Wait until the actor reports `ACTOR_STATE_RUNNING`. The script polls for up to 60 tries.
 
 ```bash
 for _ in $(seq 1 60); do
-  state="$(kubectl-ate --context kind-kind get actor exfil-agent -a lab01 -o json \
+  state="$(kubectl-ate --context kind-lab01-sandboxed get actor exfil-agent -a lab01 -o json \
     | python3 -c 'import json,sys; print(json.load(sys.stdin).get("status",{}).get("state",""))')"
   echo "actor state: ${state}"
   if [[ "${state}" == "ACTOR_STATE_RUNNING" ]]; then
@@ -117,8 +117,8 @@ done
 Check the actor.
 
 ```bash
-kubectl-ate --context kind-kind get actor exfil-agent -a lab01
-kubectl-ate --context kind-kind get egress-policy exfil-agent -a lab01
+kubectl-ate --context kind-lab01-sandboxed get actor exfil-agent -a lab01
+kubectl-ate --context kind-lab01-sandboxed get egress-policy exfil-agent -a lab01
 ```
 
 This run reached `ACTOR_STATE_RUNNING`. Pod name is from that run.
@@ -130,6 +130,6 @@ ATESPACE   ACTOR         RULES   VERSION   AGE
 lab01      exfil-agent   1       1         1s
 ```
 
-[Back: Arm B services](08-arm-b-services.md)
+[Back: Sandboxed agent services](08-sandboxed-services.md)
 
-[Next: Arm B score](10-arm-b-score.md)
+[Next: Sandboxed agent score](10-sandboxed-score.md)

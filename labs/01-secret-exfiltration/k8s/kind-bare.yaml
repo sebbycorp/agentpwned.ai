@@ -1,4 +1,4 @@
-# Arm A kind cluster.
+# Bare agent kind cluster.
 # kubeProxyMode nftables avoids the iptables "statistic" match. Some kernels
 # (including the one this lab was authored on, 6.12.94+) reject that match,
 # and then ClusterIP and in-cluster DNS never work. nftables mode is a kind
